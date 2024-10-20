@@ -1,0 +1,72 @@
+plugins {
+    id 'java-library'
+    id 'groovy'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'org.ois'
+version '0.1-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+sourceCompatibility = 11
+
+dependencies {
+    api "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    api "org.apache.groovy:groovy-all:$groovyVersion"
+
+    if(enableGraalNative == 'true') {
+        implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+    }
+}
+
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            from components.java
+
+            groupId = group
+            artifactId = rootProject.name
+            version = project.findProperty("version")
+
+            pom {
+                name = rootProject.name
+                description = 'The Core library for OIS products'
+                url = 'https://github.com/attiasas/ois-core'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = "attiasas"
+                        name = "Assaf Attias"
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/attiasas/ois-core.git")
+                    developerConnection.set("scm:git:git@github.com/attiasas/ois-core.git")
+                    url = "https://github.com/attiasas/ois-core"
+                }
+            }
+        }
+    }
+}
+
+signing {
+    required = project.hasProperty("sign")
+    var signingKey = findProperty("signingKey")
+    var signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+}
