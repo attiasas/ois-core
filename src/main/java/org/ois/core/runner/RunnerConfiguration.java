@@ -1,5 +1,7 @@
 package org.ois.core.runner;
 
+import org.ois.core.project.SimulationManifest;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -12,6 +14,34 @@ public class RunnerConfiguration {
     // The environment variable, if exists, is used to tell the runner where the project 'simulation' resources directory exists.
     // If not provided, will use the default location of the 'simulation' directory in the project.
     public static final String ENV_PROJECT_ASSETS_PATH = "OIS_PROJECT_ASSETS_PATH";
+
+    // The Supported application running platforms by the runners
+    public enum RunnerType {
+        Desktop, Html, Android
+    }
+
+    private RunnerType type;
+    private SimulationManifest simulationManifest;
+
+    public RunnerConfiguration setType(RunnerType type) {
+        this.type = type;
+        return this;
+    }
+
+    public RunnerConfiguration setSimulationManifest(SimulationManifest manifest) {
+        this.simulationManifest = manifest;
+        return this;
+    }
+
+    public SimulationManifest getSimulationManifest() {
+        return this.simulationManifest;
+    }
+
+    public static RunnerConfiguration getRunnerConfigurations(InputStream assetsProjectConfiguration) throws IOException {
+        return new RunnerConfiguration();//.setSimulationManifest(SimulationManifest.load(assetsProjectConfiguration));
+    }
+
+
     // The environment variable, if exists (default value is 'true'), is used to tell the runner that it's running not in production mode.
     public static final String ENV_DEV_MODE = "OIS_RUNNER_DEV_MODE";
 
@@ -23,19 +53,7 @@ public class RunnerConfiguration {
     // If not provided, it will search the value from environment variable named 'ANDROID_HOME';
     public static final String ENV_ANDROID_SDK_PATH = "OIS_RUNNER_ANDROID_SDK_PATH";
 
-    // The Supported application running platforms by the runners
-    public enum RunnerType {
-        Desktop, Html, Android
-    }
 
-    private RunnerType type;
 
-    public RunnerConfiguration setType(RunnerType type) {
-        this.type = type;
-        return this;
-    }
 
-    public static RunnerConfiguration getRunnerConfigurations(InputStream assetsProjectConfiguration) throws IOException {
-        return new RunnerConfiguration();
-    }
 }
