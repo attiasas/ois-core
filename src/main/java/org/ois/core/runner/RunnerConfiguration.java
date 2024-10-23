@@ -13,7 +13,7 @@ import java.io.InputStream;
 public class RunnerConfiguration {
     // The environment variable, if exists, is used to tell the runner where the project 'simulation' resources directory exists.
     // If not provided, will use the default location of the 'simulation' directory in the project.
-    public static final String ENV_PROJECT_ASSETS_PATH = "OIS_PROJECT_ASSETS_PATH";
+//    public static final String ENV_PROJECT_ASSETS_PATH = "OIS_PROJECT_ASSETS_PATH";
 
     // The Supported application running platforms by the runners
     public enum RunnerType {
@@ -31,6 +31,10 @@ public class RunnerConfiguration {
     public RunnerConfiguration setSimulationManifest(SimulationManifest manifest) {
         this.simulationManifest = manifest;
         return this;
+    }
+
+    public RunnerType getType() {
+        return this.type;
     }
 
     public SimulationManifest getSimulationManifest() {

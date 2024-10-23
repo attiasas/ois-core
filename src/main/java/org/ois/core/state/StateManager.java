@@ -6,6 +6,7 @@ import java.util.*;
 
 public class StateManager {
     private static final Logger<StateManager> log = Logger.get(StateManager.class);
+    private static final String LOG_TOPIC = "states";
     // All known states.
     private final Map<String, IState> states = new HashMap<>();
     // Active state stack by keys
@@ -20,7 +21,7 @@ public class StateManager {
         if (states.containsKey(key)) {
             throw new IllegalArgumentException("State with key '" + key + "' already exists.");
         }
-        log.info("Adding state '" + key + "' <" + state.getClass() + "> into the manager.");
+        log.info(LOG_TOPIC,"Adding state '" + key + "' <" + state.getClass() + "> into the manager.");
         this.states.put(key, state);
     }
 
@@ -50,7 +51,7 @@ public class StateManager {
         if (params.length > 0) {
             logMsg += ", with params: " + Arrays.toString(params);
         }
-        log.info(logMsg);
+        log.info(LOG_TOPIC, logMsg);
         try {
             inState.enter(params);
             this.stateStack.push(key);
@@ -64,7 +65,7 @@ public class StateManager {
             return null;
         }
         String outStateKey = this.stateStack.pop();
-        log.info("Exit state '" + outStateKey + "'");
+        log.info(LOG_TOPIC, "Exit state '" + outStateKey + "'");
         IState out = states.get(outStateKey);
         out.exit();
         return out;
@@ -78,7 +79,7 @@ public class StateManager {
             return false;
         }
         try {
-            log.debug("Update current state '" + this.stateStack.peek() + "', delta-time: " + delta);
+            log.debug(LOG_TOPIC, "Update current state '" + this.stateStack.peek() + "', delta-time: " + delta);
             if (!current.update(delta)) {
                 exitCurrentState();
             }
@@ -94,7 +95,7 @@ public class StateManager {
             return;
         }
         try {
-            log.debug("Render current state '" + this.stateStack.peek() + "'.");
+            log.debug(LOG_TOPIC, "Render current state '" + this.stateStack.peek() + "'.");
             current.render();
         } catch (Exception e) {
             handleCurrentStateException("Render", e);
@@ -107,7 +108,7 @@ public class StateManager {
             return;
         }
         try {
-            log.info("Pause current state '" + this.stateStack.peek() + "'.");
+            log.info(LOG_TOPIC, "Pause current state '" + this.stateStack.peek() + "'.");
             current.pause();
         } catch (Exception e) {
             handleCurrentStateException("Pause", e);
@@ -120,7 +121,7 @@ public class StateManager {
             return;
         }
         try {
-            log.info("Resume current state '" + this.stateStack.peek() + "'.");
+            log.info(LOG_TOPIC, "Resume current state '" + this.stateStack.peek() + "'.");
             current.resume();
         } catch (Exception e) {
             handleCurrentStateException("Resume", e);
@@ -133,7 +134,7 @@ public class StateManager {
             return;
         }
         try {
-            log.debug("Resize current state '" + this.stateStack.peek() + "' to [" + width + ", " + height + "]");
+            log.debug(LOG_TOPIC, "Resize current state '" + this.stateStack.peek() + "' to [" + width + ", " + height + "]");
             // TODO: When allowing multiple states at stack, make sure other states are okay
             current.resize(width, height);
         } catch (Exception e) {
@@ -150,7 +151,7 @@ public class StateManager {
         for (IState state : states.values())
         {
             try {
-                log.info("Dispose state '" + this.stateStack.peek() + "'.");
+                log.info(LOG_TOPIC, "Dispose state '" + this.stateStack.peek() + "'.");
                 state.dispose();
             } catch (Exception e) {
                 log.error("[Dispose] Caught exception from the state <" + state.getClass() + ">", e);

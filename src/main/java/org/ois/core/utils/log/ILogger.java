@@ -5,7 +5,9 @@ public interface ILogger {
         Debug, Info, Warn, Error
     }
 
+    void debug(String topic, String message);
     void debug(String message);
+    void info(String topic, String message);
     void info(String message);
     void warn(String message);
     void error(String message);

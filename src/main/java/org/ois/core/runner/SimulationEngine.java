@@ -34,12 +34,17 @@ public class SimulationEngine extends ApplicationAdapter {
     private SpriteBatch batch;
     private Texture image;
 
+    public RunnerConfiguration getRunnerConfig() {
+        return this.configuration;
+    }
+
     @Override
     public void create() {
         try {
             this.app = Gdx.app;
-            loadProject();
             OIS.engine = this;
+
+            loadProject();
         } catch (Exception e) {
             log.error("Can't initialize engine", e);
             throw new RuntimeException(e);
@@ -53,7 +58,7 @@ public class SimulationEngine extends ApplicationAdapter {
     }
 
     private void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        log.error("Loading Project states to manager");
+        log.info("Loading Project states to manager");
         SimulationManifest manifest = this.configuration.getSimulationManifest();
         if (manifest != null) {
             for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
@@ -61,7 +66,10 @@ public class SimulationEngine extends ApplicationAdapter {
                 log.error("State '" + entry.getKey() + "' loaded");
             }
             this.stateManager.start(manifest.getInitialState());
+            return;
         }
+        byte[] file = Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes();
+        log.warn("Try file: " + new String(file));
         if (this.stateManager.states().isEmpty()) {
             log.error("log state fail, fallback to backup");
             this.stateManager.registerState("Blue", ReflectionUtils.newInstance("org.ois.example.BlueState"));

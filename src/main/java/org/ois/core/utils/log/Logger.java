@@ -1,13 +1,16 @@
 package org.ois.core.utils.log;
 
 import com.badlogic.gdx.Gdx;
+import org.ois.core.OIS;
+import org.ois.core.runner.RunnerConfiguration;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Logger<T> implements ILogger {
     private static final Map<Class, Logger> logMap = new HashMap<>();
-    private static int minLogLevel = Level.Debug.ordinal();
+
+    private static Set<String> allowedTopics = new HashSet<>();
+    private static int minLogLevel = Level.Info.ordinal();
 
     private final Class<T> logClass;
 
@@ -18,7 +21,7 @@ public class Logger<T> implements ILogger {
     public static <T>Logger<T> get(Class<T> c)
     {
         if(!logMap.containsKey(c)) {
-            logMap.put(c,new Logger<T>(c));
+            logMap.put(c,new Logger<>(c));
         }
         return logMap.get(c);
     }
@@ -27,43 +30,83 @@ public class Logger<T> implements ILogger {
         minLogLevel = logLevel.ordinal();
     }
 
-    private void log(Logger.Level level, String message, Throwable exception) {
-        if (minLogLevel > level.ordinal()) {
+    public static void setTopics(String... topics) {
+        allowedTopics.clear();
+        allowedTopics.addAll(List.of(topics));
+    }
+
+    private boolean shouldLog(String topic) {
+        if (allowedTopics.isEmpty() || topic.isEmpty()) {
+            // Allow logging for all messages if the topic is empty or no topics are set
+            return true;
+        }
+        return allowedTopics.contains(topic);
+    }
+
+    private void log(Logger.Level level, String topic, String message, Throwable exception) {
+        if (minLogLevel > level.ordinal() || !shouldLog(topic)) {
             return;
         }
-        String format = "[" + logClass.getSimpleName() + "] : " + message;
+
+        // Prepare the log format
+        String format;
+        if (topic.isEmpty()) {
+            format = "[" + logClass.getSimpleName() + "] : " + message;
+        } else {
+            format = "[" + logClass.getSimpleName() + "] [" + topic + "] : " + message;
+        }
+
         if (exception != null && (level.equals(Level.Error) || level.equals(Level.Warn))) {
             Gdx.app.error(level.name(), format, exception);
+            return;
+        }
+        if (RunnerConfiguration.RunnerType.Html.equals(OIS.engine.getRunnerConfig().getType())) {
+            Gdx.app.error(level.name(), format);
+            return;
         }
         switch (level) {
             case Warn:
-            case Error: Gdx.app.error(level.name(), format); break;
-            default: Gdx.app.log(level.name(), format); break;
+            case Error:
+                Gdx.app.error(level.name(), format);
+                break;
+            default:
+                Gdx.app.log(level.name(), format);
+                break;
         }
+    }
+
+    @Override
+    public void debug(String topic, String message) {
+        log(Level.Debug, topic, message, null);
+    }
+
+    @Override
+    public void info(String topic, String message) {
+        log(Level.Info, topic, message, null);
     }
 
     @Override
     public void debug(String message) {
-        log(Level.Debug, message, null);
+        log(Level.Debug, "", message, null);
     }
 
     @Override
     public void info(String message) {
-        log(Level.Info, message, null);
+        log(Level.Info, "", message, null);
     }
 
     @Override
     public void warn(String message) {
-        log(Level.Warn, message, null);
+        log(Level.Warn, "", message, null);
     }
 
     @Override
     public void error(String message) {
-        log(Level.Error, message, null);
+        log(Level.Error, "", message, null);
     }
 
     @Override
     public void error(String message, Throwable exception) {
-        log(Level.Error, message, exception);
+        log(Level.Error, "", message, exception);
     }
 }
