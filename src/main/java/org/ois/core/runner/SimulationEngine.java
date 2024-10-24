@@ -11,8 +11,10 @@ import org.ois.core.OIS;
 import org.ois.core.project.SimulationManifest;
 import org.ois.core.state.StateManager;
 import org.ois.core.utils.ReflectionUtils;
+import org.ois.core.utils.io.data.formats.JsonFormat;
 import org.ois.core.utils.log.Logger;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
@@ -57,9 +59,9 @@ public class SimulationEngine extends ApplicationAdapter {
         image = new Texture("testimage.png");
     }
 
-    private void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    private void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         log.info("Loading Project states to manager");
-        SimulationManifest manifest = this.configuration.getSimulationManifest();
+        SimulationManifest manifest = JsonFormat.compact().load(new SimulationManifest(), Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes());
         if (manifest != null) {
             for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
                 this.stateManager.registerState(entry.getKey(), ReflectionUtils.newInstance(entry.getValue()));
@@ -68,8 +70,6 @@ public class SimulationEngine extends ApplicationAdapter {
             this.stateManager.start(manifest.getInitialState());
             return;
         }
-        byte[] file = Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes();
-        log.warn("Try file: " + new String(file));
         if (this.stateManager.states().isEmpty()) {
             log.error("log state fail, fallback to backup");
             this.stateManager.registerState("Blue", ReflectionUtils.newInstance("org.ois.example.BlueState"));
