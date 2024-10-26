@@ -7,8 +7,6 @@ on:
       - '**'
     tags-ignore:
       - '**'
-  pull_request:
-    types: [ labeled ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.ref }}
