@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class JsonFormatTest {
 
-    Path testFilesDirPath = Paths.get(".").toAbsolutePath().normalize().resolve(Paths.get("src","test","dataNode"));
+    Path testFilesDirPath = Paths.get(".").toAbsolutePath().normalize().resolve(Paths.get("src","test","resources","dataNode"));
     DataNode node;
 
     @BeforeTest
@@ -37,7 +37,7 @@ public class JsonFormatTest {
     public void testSerialize() throws IOException {
         // Human readable
         String actual = JsonFormat.humanReadable().serialize(node);
-        String expected = Files.readString(testFilesDirPath.resolve("testNode.json"));
+        String expected = Files.readString(testFilesDirPath.resolve("testNode.json")).replaceAll("\r","");
         assertEquals(actual, expected);
 
         // Compact

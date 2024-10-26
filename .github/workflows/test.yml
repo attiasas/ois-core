@@ -25,6 +25,9 @@ jobs:
         with:
           distribution: "corretto"
           java-version: "11"
+      - name: Give permission to gradlew
+        run: chmod +x gradlew
+        if: runner.os != 'Windows'
       # Run tests
       - name: Tests on macOS, Linux
         run: ./gradlew clean test
