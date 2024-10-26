@@ -24,6 +24,8 @@ jobs:
         with:
           distribution: "corretto"
           java-version: "11"
+      - name: Give permission to gradlew
+        run: chmod +x gradlew
 
       # Run tests
       - name: Run Spotbugs
