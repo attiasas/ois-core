@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'groovy'
+    id 'com.github.spotbugs-base' version "4.8.0"
     id 'maven-publish'
     id 'signing'
 }
@@ -16,6 +17,8 @@ repositories {
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 sourceCompatibility = 11
 
+var spotBugsVersion = "4.8.1"
+
 dependencies {
     api "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
     api "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -26,6 +29,9 @@ dependencies {
     }
 
     testImplementation group: 'org.testng', name: 'testng', version: '7.7.0'
+    // Static code analysis
+    spotbugs("com.github.spotbugs", "spotbugs", spotBugsVersion)
+    implementation("com.github.spotbugs", "spotbugs-annotations", spotBugsVersion)
 }
 
 test {
