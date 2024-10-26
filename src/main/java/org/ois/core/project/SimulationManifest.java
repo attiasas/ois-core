@@ -23,6 +23,26 @@ public class SimulationManifest implements DataObject<SimulationManifest> {
     private int screenWidth;
     private int screenHeight;
 
+    public SimulationManifest setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public SimulationManifest setPlatforms(Set<RunnerConfiguration.RunnerType> platforms) {
+        this.platforms = platforms;
+        return this;
+    }
+
+    public SimulationManifest setScreenHeight(int screenHeight) {
+        this.screenHeight = screenHeight;
+        return this;
+    }
+
+    public SimulationManifest setScreenWidth(int screenWidth) {
+        this.screenWidth = screenWidth;
+        return this;
+    }
+
     public String getTitle() { return title; }
 
     public String getInitialState() {
@@ -41,28 +61,14 @@ public class SimulationManifest implements DataObject<SimulationManifest> {
 
     @Override
     public SimulationManifest loadData(DataNode data) {
-        title = data.get("title").getString();
-        if (title == null || title.isEmpty()) {
-            title = "OIS";
-        }
-
-        initialState = data.get("initialState").getString().trim();
+        // Required
+        initialState = data.get("initialState").getString();
         states = data.get("states").toStringMap();
-
-        DataNode runner = data.get("runner");
-        if (runner == null) {
-            // Optional not exists, put default values
-
-            // dynamic screen size
-            screenWidth = 0;
-            screenHeight = 0;
-            platforms = Set.of(RunnerConfiguration.RunnerType.values());
-        } else {
-            screenWidth = data.get("runner","screenWidth").getInt();
-            screenHeight = data.get("runner", "screenHeight").getInt();
-            platforms = data.get("runner","platforms").toStringCollection(new ArrayList<>()).stream().map(RunnerConfiguration::toPlatform).collect(Collectors.toSet());
-        }
-
+        // Optional
+        title = data.getProperty("title").getString();
+        platforms = data.getProperty("runner","platforms").toStringCollection(new ArrayList<>()).stream().map(RunnerConfiguration::toPlatform).collect(Collectors.toSet());
+        screenWidth = data.getProperty("runner","screenWidth").getInt();
+        screenHeight = data.getProperty("runner", "screenHeight").getInt();
         return this;
     }
 

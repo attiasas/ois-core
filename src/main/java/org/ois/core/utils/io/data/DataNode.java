@@ -294,6 +294,7 @@ public class DataNode implements Iterable<DataNode> {
         return this.attributes.containsKey(property);
     }
 
+    // for optional attributes
     public DataNode getProperty(String... attributeNodeKeys) {
         DataNode currentNode = this;
         for (int i = 0; i < attributeNodeKeys.length; i++) {
@@ -344,10 +345,10 @@ public class DataNode implements Iterable<DataNode> {
     // Node as Collection
 
     /**
-     * Add a collection of {@link Primitive} values to add to the collection node
+     * Add a collection of primitive values to add to the collection node
      * @param primitiveValues a collection of primitive values to add to the collection node
      * @return this node, for chaining
-     * @param <T> {@link Primitive} values
+     * @param <T> primitive values
      */
     public <T> DataNode add(Collection<T> primitiveValues) {
         for(T data : primitiveValues) {
@@ -445,21 +446,6 @@ public class DataNode implements Iterable<DataNode> {
 
     // Node as Primitive
 
-    // TODO: also for get
-    public DataNode setOptionalValue(String primitiveValue, String defaultValue, boolean addIfDefault) {
-        if (primitiveValue == null || primitiveValue.isBlank()) {
-            primitiveValue = defaultValue;
-        }
-        if (!addIfDefault && primitiveValue.equals(defaultValue)) {
-            return null;
-        }
-        return setValue(primitiveValue);
-    }
-    // TODO: also for get
-    public DataNode setOptionalValue(String primitiveValue, String defaultValue) {
-        return setOptionalValue(primitiveValue, defaultValue, false);
-    }
-
     /**
      * Set the value of a node, for primitive nodes (single primitive value)
      * @param primitiveValue - value of the node
@@ -502,6 +488,9 @@ public class DataNode implements Iterable<DataNode> {
      * @return the value of the node as a String
      */
     public String getString() {
+        if (value == null) {
+            return "";
+        }
         return this.value;
     }
 
@@ -510,7 +499,11 @@ public class DataNode implements Iterable<DataNode> {
      * @return the value of the node as an Integer
      */
     public int getInt() {
-        return Integer.parseInt(getString());
+        String val = getString();
+        if (val.isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(val);
     }
 
     /**
@@ -518,7 +511,11 @@ public class DataNode implements Iterable<DataNode> {
      * @return the value of the node as a Float
      */
     public float getFloat() {
-        return Float.parseFloat(getString());
+        String val = getString();
+        if (val.isEmpty()) {
+            return 0;
+        }
+        return Float.parseFloat(val);
     }
 
     /**
@@ -526,7 +523,11 @@ public class DataNode implements Iterable<DataNode> {
      * @return the value of the node as a Boolean
      */
     public boolean getBoolean() {
-        return Boolean.parseBoolean(getString());
+        String val = getString();
+        if (val.isEmpty()) {
+            return false;
+        }
+        return Boolean.parseBoolean(val);
     }
 
     @Override

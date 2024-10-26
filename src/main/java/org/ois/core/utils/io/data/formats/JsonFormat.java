@@ -195,7 +195,7 @@ public class JsonFormat implements DataFormat {
             return currentIndex < json.length();
         }
 
-        public void consume(int count) {
+        public void consume(int count, boolean removeWhiteSpace) {
             for (int i = 0; i < count; i++) {
                 if (json.charAt(currentIndex) == '\n') {
                     lineNumber++;
@@ -205,14 +205,15 @@ public class JsonFormat implements DataFormat {
                 }
                 currentIndex++;
             }
-            while (hasNextToken() && Character.isWhitespace(json.charAt(currentIndex))) {
-                consume(1);
+            if (!removeWhiteSpace) {
+                return;
             }
+            consumeWhiteSpace();
         }
 
         public void consumeWhiteSpace() {
             while (hasNextToken() && Character.isWhitespace(json.charAt(currentIndex))) {
-                consume(1);
+                consume(1,false);
             }
         }
 
@@ -242,13 +243,13 @@ public class JsonFormat implements DataFormat {
         char currentChar = state.current();
         switch (currentChar) {
             case '{':
-                state.consume(1);
+                state.consume(1, true);
                 return parseJsonObject(state);
             case '[':
-                state.consume(1);
+                state.consume(1, true);
                 return parseJsonArray(state);
             case '"':
-                state.consume(1);
+                state.consume(1, false);
                 return parseJsonString(state);
             default:
                 return parsePrimitiveValue(state);
@@ -262,24 +263,25 @@ public class JsonFormat implements DataFormat {
             if (state.current() != '"') {
                 throw new IllegalArgumentException("Expected '\"' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
             }
-            state.consume(1);
+            state.consume(1, true);
             String key = parseJsonKey(state);
+            state.consumeWhiteSpace();
             // Check for colon
             if (state.current() != ':') {
                 throw new IllegalArgumentException("Expected ':' after key at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
             }
-            state.consume(1); // Consume ':'
+            state.consume(1, true); // Consume ':'
             DataNode value = parseJsonValue(state);
             node.set(key, value);
             if (state.current() == ',') {
-                state.consume(1); // Consume ','
+                state.consume(1, true); // Consume ','
             }
         }
 
         if (!state.hasNextToken()) {
             throw new IllegalArgumentException("Expected '}' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
         }
-        state.consume(1); // Consume '}'
+        state.consume(1, true); // Consume '}'
         return node;
     }
 
@@ -290,14 +292,14 @@ public class JsonFormat implements DataFormat {
             DataNode value = parseJsonValue(state);
             node.add(value);
             if (state.current() == ',') {
-                state.consume(1); // Consume ','
+                state.consume(1, true); // Consume ','
             }
         }
 
         if (!state.hasNextToken()) {
             throw new IllegalArgumentException("Expected ']' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
         }
-        state.consume(1); // Consume ']'
+        state.consume(1, true); // Consume ']'
         return node;
     }
 
@@ -312,11 +314,11 @@ public class JsonFormat implements DataFormat {
         while (state.hasNextToken()) {
             char currentChar = state.current();
             if (currentChar == '"') {
-                state.consume(1); // Consume closing '"'
+                state.consume(1, true); // Consume closing '"'
                 return result.toString();
             } else if (currentChar == '\\') {
                 // Handle escape sequences
-                state.consume(1); // Consume '\'
+                state.consume(1, false); // Consume '\'
                 if (!state.hasNextToken()) {
                     throw new IllegalArgumentException("Unexpected end of string escape at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
                 }
@@ -348,7 +350,7 @@ public class JsonFormat implements DataFormat {
             } else {
                 result.append(currentChar);
             }
-            state.consume(1);
+            state.consume(1,false);
         }
 
         throw new IllegalArgumentException("Unterminated string at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
@@ -393,13 +395,15 @@ public class JsonFormat implements DataFormat {
 //        }
     }
 
-    public DataNode parseJsonBoolean(ParseState state) {
+    private DataNode parseJsonBoolean(ParseState state) {
         String booleanStr = state.json.substring(state.currentIndex, state.currentIndex + 4);
         if (booleanStr.equals("true")) {
-            state.consume(4);
+            state.consume(4, true);
             return DataNode.Primitive(true);
-        } else if (booleanStr.equals("false")) {
-            state.consume(5);
+        }
+        booleanStr = state.json.substring(state.currentIndex, state.currentIndex + 5);
+        if (booleanStr.equals("false")) {
+            state.consume(5, true);
             return DataNode.Primitive(false);
         }
         throw new IllegalArgumentException("Invalid boolean value at at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
@@ -408,7 +412,7 @@ public class JsonFormat implements DataFormat {
     private DataNode parseJsonNull(ParseState state) {
         String nullStr = state.json.substring(state.currentIndex, state.currentIndex + 4);
         if (nullStr.equals("null")) {
-            state.consume(4);
+            state.consume(4, true);
             return null; // JSON null corresponds to null in DataNode
         }
         throw new IllegalArgumentException("Invalid null value at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
@@ -417,9 +421,10 @@ public class JsonFormat implements DataFormat {
     private DataNode parseJsonNumber(ParseState state) {
         int startIndex = state.currentIndex;
         while (state.hasNextToken() && (Character.isDigit(state.current()) || state.current() == '-' || state.current() == '.')) {
-            state.consume(1);
+            state.consume(1,false);
         }
         String numberStr = state.json.substring(startIndex, state.currentIndex);
+        state.consumeWhiteSpace();
         if (numberStr.contains(".")) {
             return DataNode.Primitive(Float.parseFloat(numberStr));
         } else {

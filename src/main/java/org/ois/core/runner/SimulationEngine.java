@@ -74,7 +74,7 @@ public class SimulationEngine extends ApplicationAdapter {
         log.info("Loading Project states to manager");
         for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
             this.stateManager.registerState(entry.getKey(), ReflectionUtils.newInstance(entry.getValue()));
-            log.info("State '" + entry.getKey() + "' loaded");
+            log.debug("State '" + entry.getKey() + "' loaded");
         }
         log.info("Loading completed");
         this.stateManager.start(manifest.getInitialState());
