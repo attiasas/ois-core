@@ -17,8 +17,6 @@ repositories {
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 sourceCompatibility = 11
 
-var spotBugsVersion = "4.8.1"
-
 dependencies {
     api "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
     api "com.badlogicgames.gdx:gdx:$gdxVersion"
