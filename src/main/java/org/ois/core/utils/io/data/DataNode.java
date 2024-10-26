@@ -15,13 +15,6 @@ public class DataNode implements Iterable<DataNode> {
         Unknown, Object, Collection, Primitive
     }
 
-    /**
-     * The possible Primitive data types that a node can represent
-     */
-    public enum Primitive {
-        Str, Int, Float, Bool
-    }
-
     protected String value;
     protected List<DataNode> content;
     protected Map<String, DataNode> attributes;
@@ -167,6 +160,11 @@ public class DataNode implements Iterable<DataNode> {
     }
 
     // User methods to retrieve data stored at nodes
+
+    public String[] toStringCollection() {
+        List<String> list = toStringCollection(new ArrayList<>());
+        return list.toArray(String[]::new);
+    }
 
     public <T extends Collection<String>> T toStringCollection(T destination) {
         destination.addAll(this.content.stream().map(DataNode::getString).collect(Collectors.toList()));
@@ -446,6 +444,21 @@ public class DataNode implements Iterable<DataNode> {
     }
 
     // Node as Primitive
+
+    // TODO: also for get
+    public DataNode setOptionalValue(String primitiveValue, String defaultValue, boolean addIfDefault) {
+        if (primitiveValue == null || primitiveValue.isBlank()) {
+            primitiveValue = defaultValue;
+        }
+        if (!addIfDefault && primitiveValue.equals(defaultValue)) {
+            return null;
+        }
+        return setValue(primitiveValue);
+    }
+    // TODO: also for get
+    public DataNode setOptionalValue(String primitiveValue, String defaultValue) {
+        return setOptionalValue(primitiveValue, defaultValue, false);
+    }
 
     /**
      * Set the value of a node, for primitive nodes (single primitive value)

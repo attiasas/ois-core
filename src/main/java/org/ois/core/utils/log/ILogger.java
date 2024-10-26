@@ -5,6 +5,19 @@ public interface ILogger {
         Debug, Info, Warn, Error
     }
 
+    static Level toLogLevel(String logLevel) {
+        switch (logLevel.trim().toLowerCase()) {
+            case "debug":
+                return Level.Debug;
+            case "warn":
+                return Level.Warn;
+            case "error":
+                return Level.Error;
+            default:
+                return Level.Info;
+        }
+    }
+
     void debug(String topic, String message);
     void debug(String message);
     void info(String topic, String message);

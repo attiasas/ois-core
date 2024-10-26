@@ -1,0 +1,15 @@
+# Gradle
+.gradle
+
+# Intellij idea
+.idea
+/target
+/out
+/build
+*.iml
+
+# IOS
+.DS_Store
+
+# Misc
+.java-version

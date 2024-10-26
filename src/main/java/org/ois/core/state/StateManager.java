@@ -26,6 +26,7 @@ public class StateManager {
     }
 
     public void start(String initialState) {
+        log.info(LOG_TOPIC, "Starting StateManager with state '" + initialState + "'");
         changeState(initialState);
     }
 
@@ -56,7 +57,7 @@ public class StateManager {
             inState.enter(params);
             this.stateStack.push(key);
         } catch (Exception e) {
-            log.error("Caught exception trying to enter state '" + key + "'", e);
+            throw new RuntimeException("Caught exception trying to enter state '" + key + "'", e);
         }
     }
 
@@ -163,8 +164,7 @@ public class StateManager {
         String outState = this.stateStack.peek();
         String msg = "[" + topic + "] Caught exception from the current state '" + outState + "'";
         if (exitCurrentState() == null) {
-            log.error(msg);
-            throw e;
+            throw new Exception(msg, e);
         } else {
             log.error(msg, e);
         }

@@ -177,29 +177,55 @@ public class JsonFormat implements DataFormat {
     private static class ParseState {
         String json;
         int currentIndex;
+        int lineNumber;
+        int columnNumber;
 
         public ParseState(String data) {
             this.json = data;
+            this.currentIndex = 0;
+            this.lineNumber = 1;
+            this.columnNumber = 1;
         }
 
         public char current() {
             return json.charAt(currentIndex);
         }
 
-        public boolean currentStartsWith(String str) {
-            return json.substring(currentIndex).startsWith(str);
-        }
-
-        public void consume(int count) {
-            currentIndex += count;
-        }
-
         public boolean hasNextToken() {
             return currentIndex < json.length();
         }
 
-        public int getPosition() {
-            return currentIndex;
+        public void consume(int count) {
+            for (int i = 0; i < count; i++) {
+                if (json.charAt(currentIndex) == '\n') {
+                    lineNumber++;
+                    columnNumber = 1;
+                } else {
+                    columnNumber++;
+                }
+                currentIndex++;
+            }
+            while (hasNextToken() && Character.isWhitespace(json.charAt(currentIndex))) {
+                consume(1);
+            }
+        }
+
+        public void consumeWhiteSpace() {
+            while (hasNextToken() && Character.isWhitespace(json.charAt(currentIndex))) {
+                consume(1);
+            }
+        }
+
+        public String remaining() {
+            return json.substring(currentIndex);
+        }
+
+        public int getLineNumber() {
+            return lineNumber;
+        }
+
+        public int getColumnNumber() {
+            return columnNumber;
         }
     }
 
@@ -208,174 +234,167 @@ public class JsonFormat implements DataFormat {
         return parseJsonValue(new ParseState(data));
     }
 
-    // Look at first char
-    // If { -> advance current by 1, return parseJsonObject
-    // If [ -> advance current by 1, return parseJsonArray
-    // If " -> advance current by 1, return parseJsonString
-    // matchLongestNumber, if string not empty return new DataNode with its value, advance by matchLongestNumber size to consume
-    // if equals to false or true, return new DataNode with its value, advance by str size to consume
-    // if equals null return null
     private DataNode parseJsonValue(ParseState state) {
-        skipWhitespace(state);
         if (!state.hasNextToken()) {
-            throw new JsonParseException("Unexpected end of input at position " + state.getPosition());
+            throw new IllegalArgumentException("Unexpected end of JSON data at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
         }
 
         char currentChar = state.current();
-        if (currentChar == '{') {
-            state.consume(1);
-            return parseJsonObject(state);
-        } else if (currentChar == '[') {
-            state.consume(1);
-            return parseJsonArray(state);
-        } else if (currentChar == '"') {
-            state.consume(1);
-            return parseJsonString(state);
-        } else if (currentChar == 't' || currentChar == 'f') {
-            return parseJsonBoolean(state);
-        } else if (currentChar == 'n') {
-            return parseJsonNull(state);
-        } else {
-            return parseJsonNumber(state);
+        switch (currentChar) {
+            case '{':
+                state.consume(1);
+                return parseJsonObject(state);
+            case '[':
+                state.consume(1);
+                return parseJsonArray(state);
+            case '"':
+                state.consume(1);
+                return parseJsonString(state);
+            default:
+                return parsePrimitiveValue(state);
         }
     }
 
-    // create node
-    // while next is not }
-    // * check that next is " for the property key, advance 1 current index to consume
-    // * get key with parseJsonKey
-    // * check that next is : , advance 1 current index to consume
-    // * get value with parseJsonValue
-    // * put in the node the value with the key
-    // * check if next is , if it is advance 1 current index to consume
-    // after while check next is } advance 1 current index to consume
-    // return node
     private DataNode parseJsonObject(ParseState state) {
-        DataNode objectNode = DataNode.Object();
-        skipWhitespace(state);
+        DataNode node = DataNode.Object();
 
         while (state.hasNextToken() && state.current() != '}') {
             if (state.current() != '"') {
-                throw new JsonParseException("Expected '\"' to start a key at position " + state.getPosition());
+                throw new IllegalArgumentException("Expected '\"' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
             }
-            state.consume(1); // consume '\"'
+            state.consume(1);
             String key = parseJsonKey(state);
-            skipWhitespace(state);
+            // Check for colon
             if (state.current() != ':') {
-                throw new JsonParseException("Expected ':' after key at position " + state.getPosition());
+                throw new IllegalArgumentException("Expected ':' after key at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
             }
-            state.consume(1); // consume ':'
+            state.consume(1); // Consume ':'
             DataNode value = parseJsonValue(state);
-            objectNode.set(key, value);
-
-            skipWhitespace(state);
+            node.set(key, value);
             if (state.current() == ',') {
-                state.consume(1); // consume ','
-            } else if (state.current() != '}') {
-                throw new JsonParseException("Expected '}' or ',' at position " + state.getPosition());
+                state.consume(1); // Consume ','
             }
         }
-        if (state.hasNextToken()) {
-            state.consume(1); // consume '}'
-        } else {
-            throw new JsonParseException("Unexpected end of input, Expected '}' at position " + state.getPosition());
+
+        if (!state.hasNextToken()) {
+            throw new IllegalArgumentException("Expected '}' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
         }
-        return objectNode;
+        state.consume(1); // Consume '}'
+        return node;
     }
 
-    // create node
-    // while next is not ]
-    // * get value with parseJsonValue
-    // * add value to node
-    // * check if next is , if it is advance 1 current index to consume
-    // after while check next is ] advance 1 current index to consume
-    // return node
     private DataNode parseJsonArray(ParseState state) {
-        DataNode arrayNode = DataNode.Collection();
-        skipWhitespace(state);
+        DataNode node = DataNode.Collection();
 
         while (state.hasNextToken() && state.current() != ']') {
             DataNode value = parseJsonValue(state);
-            arrayNode.add(value);
-
-            skipWhitespace(state);
+            node.add(value);
             if (state.current() == ',') {
-                state.consume(1); // consume ','
-            } else if (state.current() != ']') {
-                throw new JsonParseException("Expected ']' or ',' at position " + state.getPosition());
+                state.consume(1); // Consume ','
             }
         }
-        if (state.hasNextToken() && state.current() == ']') {
-            state.consume(1); // consume ']'
-        } else {
-            throw new JsonParseException("Expected ']' at position " + state.getPosition());
+
+        if (!state.hasNextToken()) {
+            throw new IllegalArgumentException("Expected ']' at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
         }
-        return arrayNode;
+        state.consume(1); // Consume ']'
+        return node;
     }
 
-    // create node
-    // build string until the next " not escaped, dont forget to advance for the amount consumed
-    // advance 1 current index to consume the closing "
-    // return node
     private DataNode parseJsonString(ParseState state) {
-        String stringValue = parseString(state);
-        return DataNode.Primitive(stringValue);
+        String str = parseString(state);
+        return DataNode.Primitive(str);
     }
 
-    // build string until the next " not escaped, dont forget to advance for the amount consumed
-    // advance 1 current index to consume the closing "
-    // return string
     private String parseString(ParseState state) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder result = new StringBuilder();
+
         while (state.hasNextToken()) {
             char currentChar = state.current();
             if (currentChar == '"') {
-                state.consume(1); // consume '"'
-                return sb.toString();
-            } else if (currentChar == '\\') { // Handle escape sequences
-                state.consume(1);
+                state.consume(1); // Consume closing '"'
+                return result.toString();
+            } else if (currentChar == '\\') {
+                // Handle escape sequences
+                state.consume(1); // Consume '\'
                 if (!state.hasNextToken()) {
-                    throw new JsonParseException("Unexpected end of input after escape character at position " + state.getPosition());
+                    throw new IllegalArgumentException("Unexpected end of string escape at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
                 }
-                currentChar = state.current();
-                switch (currentChar) {
+                char escapedChar = state.current();
+                switch (escapedChar) {
                     case '"':
                     case '\\':
                     case '/':
-                        sb.append(currentChar);
+                        result.append(escapedChar);
                         break;
                     case 'b':
-                        sb.append('\b');
+                        result.append('\b');
                         break;
                     case 'f':
-                        sb.append('\f');
+                        result.append('\f');
                         break;
                     case 'n':
-                        sb.append('\n');
+                        result.append('\n');
                         break;
                     case 'r':
-                        sb.append('\r');
+                        result.append('\r');
                         break;
                     case 't':
-                        sb.append('\t');
+                        result.append('\t');
                         break;
                     default:
-                        throw new JsonParseException("Invalid escape character at position " + state.getPosition());
+                        throw new IllegalArgumentException("Invalid escape sequence at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
                 }
             } else {
-                sb.append(currentChar);
+                result.append(currentChar);
             }
-            state.consume(1); // consume the current character
+            state.consume(1);
         }
-        throw new JsonParseException("Unexpected end of input in string at position " + state.getPosition());
+
+        throw new IllegalArgumentException("Unterminated string at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
     }
 
     private String parseJsonKey(ParseState state) {
         return parseString(state);
     }
 
-    private DataNode parseJsonBoolean(ParseState state) {
-        String booleanStr = state.json.substring(state.getPosition(), state.getPosition() + 4);
+    private DataNode parsePrimitiveValue(ParseState state) {
+        if (state.current() == 't' || state.current() == 'f') {
+            return parseJsonBoolean(state);
+        } else if (state.current() == 'n') {
+            return parseJsonNull(state);
+        } else {
+            return parseJsonNumber(state);
+        }
+
+//        StringBuilder value = new StringBuilder();
+//
+//        while (state.hasNextToken() && !Character.isWhitespace(state.current()) && state.current() != ',' && state.current() != '}' && state.current() != ']') {
+//            value.append(state.current());
+//            state.consume(1);
+//        }
+//
+//        String valueStr = value.toString();
+//        if (valueStr.equals("null")) {
+//            return null;
+//        } else if (valueStr.equals("true") || valueStr.equals("false")) {
+//            return DataNode.Primitive(Boolean.parseBoolean(valueStr));
+//        } else {
+//            try {
+//                // Check if it's a number (integer or float)
+//                if (valueStr.contains(".")) {
+//                    return DataNode.Primitive(Float.parseFloat(valueStr));
+//                } else {
+//                    return DataNode.Primitive(Integer.parseInt(valueStr));
+//                }
+//            } catch (NumberFormatException e) {
+//                throw new IllegalArgumentException("Invalid number format at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
+//            }
+//        }
+    }
+
+    public DataNode parseJsonBoolean(ParseState state) {
+        String booleanStr = state.json.substring(state.currentIndex, state.currentIndex + 4);
         if (booleanStr.equals("true")) {
             state.consume(4);
             return DataNode.Primitive(true);
@@ -383,24 +402,24 @@ public class JsonFormat implements DataFormat {
             state.consume(5);
             return DataNode.Primitive(false);
         }
-        throw new JsonParseException("Invalid boolean value at position " + state.getPosition());
+        throw new IllegalArgumentException("Invalid boolean value at at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
     }
 
     private DataNode parseJsonNull(ParseState state) {
-        String nullStr = state.json.substring(state.getPosition(), state.getPosition() + 4);
+        String nullStr = state.json.substring(state.currentIndex, state.currentIndex + 4);
         if (nullStr.equals("null")) {
             state.consume(4);
             return null; // JSON null corresponds to null in DataNode
         }
-        throw new JsonParseException("Invalid null value at position " + state.getPosition());
+        throw new IllegalArgumentException("Invalid null value at line: " + state.getLineNumber() + ", column: " + state.getColumnNumber());
     }
 
     private DataNode parseJsonNumber(ParseState state) {
-        int startIndex = state.getPosition();
+        int startIndex = state.currentIndex;
         while (state.hasNextToken() && (Character.isDigit(state.current()) || state.current() == '-' || state.current() == '.')) {
             state.consume(1);
         }
-        String numberStr = state.json.substring(startIndex, state.getPosition());
+        String numberStr = state.json.substring(startIndex, state.currentIndex);
         if (numberStr.contains(".")) {
             return DataNode.Primitive(Float.parseFloat(numberStr));
         } else {
@@ -408,18 +427,227 @@ public class JsonFormat implements DataFormat {
         }
     }
 
-    private void skipWhitespace(ParseState state) {
-        while (state.hasNextToken() && Character.isWhitespace(state.current())) {
-            state.consume(1);
-        }
-    }
 
-    // Custom exception class for JSON parsing errors
-    public static class JsonParseException extends RuntimeException {
-        public JsonParseException(String message) {
-            super(message);
-        }
-    }
+
+
+
+
+
+
+
+
+//    // Look at first char
+//    // If { -> advance current by 1, return parseJsonObject
+//    // If [ -> advance current by 1, return parseJsonArray
+//    // If " -> advance current by 1, return parseJsonString
+//    // matchLongestNumber, if string not empty return new DataNode with its value, advance by matchLongestNumber size to consume
+//    // if equals to false or true, return new DataNode with its value, advance by str size to consume
+//    // if equals null return null
+//    private DataNode parseJsonValue(ParseState state) {
+//        skipWhitespace(state);
+//        if (!state.hasNextToken()) {
+//            throw new JsonParseException("Unexpected end of input at position " + state.getPosition());
+//        }
+//
+//        char currentChar = state.current();
+//        if (currentChar == '{') {
+//            state.consume(1);
+//            return parseJsonObject(state);
+//        } else if (currentChar == '[') {
+//            state.consume(1);
+//            return parseJsonArray(state);
+//        } else if (currentChar == '"') {
+//            state.consume(1);
+//            return parseJsonString(state);
+//        } else if (currentChar == 't' || currentChar == 'f') {
+//            return parseJsonBoolean(state);
+//        } else if (currentChar == 'n') {
+//            return parseJsonNull(state);
+//        } else {
+//            return parseJsonNumber(state);
+////        }
+//    }
+//
+//    // create node
+//    // while next is not }
+//    // * check that next is " for the property key, advance 1 current index to consume
+//    // * get key with parseJsonKey
+//    // * check that next is : , advance 1 current index to consume
+//    // * get value with parseJsonValue
+//    // * put in the node the value with the key
+//    // * check if next is , if it is advance 1 current index to consume
+//    // after while check next is } advance 1 current index to consume
+//    // return node
+//    private DataNode parseJsonObject(ParseState state) {
+//        DataNode objectNode = DataNode.Object();
+//        skipWhitespace(state);
+//
+//        while (state.hasNextToken() && state.current() != '}') {
+//            if (state.current() != '"') {
+//                throw new JsonParseException("Expected '\"' to start a key at position " + state.getPosition());
+//            }
+//            state.consume(1); // consume '\"'
+//            String key = parseJsonKey(state);
+//            skipWhitespace(state);
+//            if (state.current() != ':') {
+//                throw new JsonParseException("Expected ':' after key at position " + state.getPosition());
+//            }
+//            state.consume(1); // consume ':'
+//            DataNode value = parseJsonValue(state);
+//            objectNode.set(key, value);
+//
+//            skipWhitespace(state);
+//            if (state.current() == ',') {
+//                state.consume(1); // consume ','
+//            } else if (state.current() != '}') {
+//                throw new JsonParseException("Expected '}' or ',' at position " + state.getPosition());
+//            }
+//        }
+//        if (state.hasNextToken()) {
+//            state.consume(1); // consume '}'
+//        } else {
+//            throw new JsonParseException("Unexpected end of input, Expected '}' at position " + state.getPosition());
+//        }
+//        return objectNode;
+//    }
+//
+//    // create node
+//    // while next is not ]
+//    // * get value with parseJsonValue
+//    // * add value to node
+//    // * check if next is , if it is advance 1 current index to consume
+//    // after while check next is ] advance 1 current index to consume
+//    // return node
+//    private DataNode parseJsonArray(ParseState state) {
+//        DataNode arrayNode = DataNode.Collection();
+//        skipWhitespace(state);
+//
+//        while (state.hasNextToken() && state.current() != ']') {
+//            DataNode value = parseJsonValue(state);
+//            arrayNode.add(value);
+//
+//            skipWhitespace(state);
+//            if (state.current() == ',') {
+//                state.consume(1); // consume ','
+//            } else if (state.current() != ']') {
+//                throw new JsonParseException("Expected ']' or ',' at position " + state.getPosition());
+//            }
+//        }
+//        if (state.hasNextToken()) {
+//            state.consume(1); // consume ']'
+//        } else {
+//            throw new JsonParseException("Expected ']' at position " + state.getPosition());
+//        }
+//        return arrayNode;
+//    }
+//
+//    // create node
+//    // build string until the next " not escaped, dont forget to advance for the amount consumed
+//    // advance 1 current index to consume the closing "
+//    // return node
+//    private DataNode parseJsonString(ParseState state) {
+//        String stringValue = parseString(state);
+//        return DataNode.Primitive(stringValue);
+//    }
+//
+//    // build string until the next " not escaped, dont forget to advance for the amount consumed
+//    // advance 1 current index to consume the closing "
+//    // return string
+//    private String parseString(ParseState state) {
+//        StringBuilder sb = new StringBuilder();
+//        while (state.hasNextToken()) {
+//            char currentChar = state.current();
+//            if (currentChar == '"') {
+//                state.consume(1); // consume '"'
+//                return sb.toString();
+//            } else if (currentChar == '\\') { // Handle escape sequences
+//                state.consume(1);
+//                if (!state.hasNextToken()) {
+//                    throw new JsonParseException("Unexpected end of input after escape character at position " + state.getPosition());
+//                }
+//                currentChar = state.current();
+//                switch (currentChar) {
+//                    case '"':
+//                    case '\\':
+//                    case '/':
+//                        sb.append(currentChar);
+//                        break;
+//                    case 'b':
+//                        sb.append('\b');
+//                        break;
+//                    case 'f':
+//                        sb.append('\f');
+//                        break;
+//                    case 'n':
+//                        sb.append('\n');
+//                        break;
+//                    case 'r':
+//                        sb.append('\r');
+//                        break;
+//                    case 't':
+//                        sb.append('\t');
+//                        break;
+//                    default:
+//                        throw new JsonParseException("Invalid escape character at position " + state.getPosition());
+//                }
+//            } else {
+//                sb.append(currentChar);
+//            }
+//            state.consume(1); // consume the current character
+//        }
+//        throw new JsonParseException("Unexpected end of input in string at position " + state.getPosition());
+//    }
+//
+//    private String parseJsonKey(ParseState state) {
+//        return parseString(state);
+//    }
+//
+//    private DataNode parseJsonBoolean(ParseState state) {
+//        String booleanStr = state.json.substring(state.getPosition(), state.getPosition() + 4);
+//        if (booleanStr.equals("true")) {
+//            state.consume(4);
+//            return DataNode.Primitive(true);
+//        } else if (booleanStr.equals("false")) {
+//            state.consume(5);
+//            return DataNode.Primitive(false);
+//        }
+//        throw new JsonParseException("Invalid boolean value at position " + state.getPosition());
+//    }
+//
+//    private DataNode parseJsonNull(ParseState state) {
+//        String nullStr = state.json.substring(state.getPosition(), state.getPosition() + 4);
+//        if (nullStr.equals("null")) {
+//            state.consume(4);
+//            return null; // JSON null corresponds to null in DataNode
+//        }
+//        throw new JsonParseException("Invalid null value at position " + state.getPosition());
+//    }
+//
+//    private DataNode parseJsonNumber(ParseState state) {
+//        int startIndex = state.getPosition();
+//        while (state.hasNextToken() && (Character.isDigit(state.current()) || state.current() == '-' || state.current() == '.')) {
+//            state.consume(1);
+//        }
+//        String numberStr = state.json.substring(startIndex, state.getPosition());
+//        if (numberStr.contains(".")) {
+//            return DataNode.Primitive(Float.parseFloat(numberStr));
+//        } else {
+//            return DataNode.Primitive(Integer.parseInt(numberStr));
+//        }
+//    }
+//
+//    private void skipWhitespace(ParseState state) {
+//        while (state.hasNextToken() && Character.isWhitespace(state.current())) {
+//            state.consume(1);
+//        }
+//    }
+//
+//    // Custom exception class for JSON parsing errors
+//    public static class JsonParseException extends RuntimeException {
+//        public JsonParseException(String message) {
+//            super(message);
+//        }
+//    }
 
 
 

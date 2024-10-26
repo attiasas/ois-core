@@ -9,8 +9,9 @@ import java.util.*;
 public class Logger<T> implements ILogger {
     private static final Map<Class, Logger> logMap = new HashMap<>();
 
-    private static Set<String> allowedTopics = new HashSet<>();
-    private static int minLogLevel = Level.Info.ordinal();
+    private static final Set<String> allowedTopics = new HashSet<>();
+    private static final ILogger.Level DEFAULT_LEVEL = Level.Info;
+    private static int minLogLevel = DEFAULT_LEVEL.ordinal();
 
     private final Class<T> logClass;
 
@@ -27,11 +28,17 @@ public class Logger<T> implements ILogger {
     }
 
     public static void setLogLevel(Level logLevel) {
+        if (logLevel == null) {
+             logLevel = DEFAULT_LEVEL;
+        }
         minLogLevel = logLevel.ordinal();
     }
 
     public static void setTopics(String... topics) {
         allowedTopics.clear();
+        if (topics == null) {
+            return;
+        }
         allowedTopics.addAll(List.of(topics));
     }
 

@@ -29,6 +29,10 @@ public interface DataFormat {
     }
 
     default <T extends DataObject<T>> T load(T objToLoad, byte[] source) {
-        return objToLoad.loadData(deserialize(new String(source)));
+        return load(objToLoad, new String(source));
+    }
+
+    default <T extends DataObject<T>> T load(T objToLoad, String source) {
+        return objToLoad.loadData(deserialize(source));
     }
 }
