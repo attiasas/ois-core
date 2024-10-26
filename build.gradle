@@ -30,8 +30,8 @@ dependencies {
 
     testImplementation group: 'org.testng', name: 'testng', version: '7.7.0'
     // Static code analysis
-    spotbugs("com.github.spotbugs", "spotbugs", spotBugsVersion)
-    implementation("com.github.spotbugs", "spotbugs-annotations", spotBugsVersion)
+    spotbugs "com.github.spotbugs:spotbugs:$spotBugsVersion"
+    implementation "com.github.spotbugs:spotbugs-annotations:$spotBugsVersion"
 }
 
 test {
