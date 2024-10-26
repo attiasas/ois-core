@@ -4,8 +4,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class FileUtils {
     public static boolean copyFile(InputStream src, Path target, boolean failIfCantCreate) throws IOException {

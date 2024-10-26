@@ -24,6 +24,19 @@ dependencies {
     if(enableGraalNative == 'true') {
         implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
     }
+
+    testImplementation group: 'org.testng', name: 'testng', version: '7.7.0'
+}
+
+test {
+    useTestNG() {
+        useDefaultListeners = true
+    }
+    testLogging {
+        exceptionFormat "full"
+        events "started", "passed", "skipped", "failed", "standardOut", "standardError"
+        minGranularity 0
+    }
 }
 
 publishing {

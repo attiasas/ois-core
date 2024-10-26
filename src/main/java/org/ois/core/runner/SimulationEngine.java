@@ -45,7 +45,9 @@ public class SimulationEngine extends ApplicationAdapter {
     @Override
     public void create() {
         this.app = Gdx.app;
+
         OIS.engine = this;
+        OIS.stateManager = this.stateManager;
 
         Logger.setLogLevel(this.configuration.getLogLevel());
         Logger.setTopics(this.configuration.getLogTopics());
