@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FileUtils {
     public static boolean copyFile(InputStream src, Path target, boolean failIfCantCreate) throws IOException {
@@ -46,7 +47,7 @@ public class FileUtils {
         // Copy all files and subdirectories from source to target
         EnumSet<FileVisitOption> options = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
         Files.walkFileTree(sourcePath, options, Integer.MAX_VALUE, new SimpleFileVisitor<>() {
-            private final List<PathMatcher> exclusions = Arrays.stream(excludePatterns).map(pattern -> FileSystems.getDefault().getPathMatcher("glob:" + pattern)).toList();
+            private final List<PathMatcher> exclusions = Arrays.stream(excludePatterns).map(pattern -> FileSystems.getDefault().getPathMatcher("glob:" + pattern)).collect(Collectors.toList());
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 for (PathMatcher matcher : this.exclusions) {
