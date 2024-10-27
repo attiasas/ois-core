@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class JsonFormatTest {
 
-    Path testFilesDirPath = Paths.get(".").toAbsolutePath().normalize().resolve(Paths.get("src","test","resources","dataNode"));
+    Path testFilesDirPath = Paths.get(".").toAbsolutePath().normalize().resolve(Paths.get("src","test","resources", "json"));
     DataNode node;
 
     @BeforeTest

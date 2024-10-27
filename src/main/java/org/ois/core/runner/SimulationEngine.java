@@ -20,24 +20,39 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
+/**
+ * The main simulation engine for the OIS project.
+ * This class manages the application's lifecycle, including loading and managing
+ * the states of the simulation.
+ */
 public class SimulationEngine extends ApplicationAdapter {
     private static final Logger<SimulationEngine> log = Logger.get(SimulationEngine.class);
 
-    // The Gdx application
+    /** The Gdx application **/
     private Application app;
-    // The engine runner configuration with information from the dynamic project (Graphic, Meta-data...)
+    /** The engine runner configuration with information from the dynamic project (Graphic, Meta-data...) **/
     private final RunnerConfiguration configuration;
-
-    // The state manager that handles the states of the simulations provided by the project;
+    /** The state manager that handles the states of the simulations provided by the project; **/
     public final StateManager stateManager;
+    /** The Error state, if the stateManager throws an error, the engine will switch to this state **/
     public final ErrorState errorState;
 
+    /**
+     * Constructs a new SimulationEngine with the specified configuration.
+     *
+     * @param configuration The configuration to be used by the simulation engine.
+     */
     public SimulationEngine(RunnerConfiguration configuration) {
         this.configuration = configuration;
         this.stateManager = new StateManager();
         this.errorState = new ErrorState();
     }
 
+    /**
+     * Retrieves the runner configuration for this engine.
+     *
+     * @return The runner configuration.
+     */
     public RunnerConfiguration getRunnerConfig() {
         return this.configuration;
     }
@@ -59,7 +74,16 @@ public class SimulationEngine extends ApplicationAdapter {
         }
     }
 
-    private void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    /**
+     * Loads the project manifest if needed and initializes the project states using reflection from the manifest.
+     *
+     * @throws ReflectionException if there is an error during reflection.
+     * @throws InvocationTargetException if a method cannot be invoked.
+     * @throws NoSuchMethodException if the method to invoke cannot be found.
+     * @throws InstantiationException if an instance cannot be created.
+     * @throws IllegalAccessException if access to the method or constructor is denied.
+     */
+    public void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
        SimulationManifest manifest = configuration.getSimulationManifest();
        if (manifest == null) {
            // For HTML, at Launcher we don't have access to resources.
@@ -82,7 +106,13 @@ public class SimulationEngine extends ApplicationAdapter {
         this.stateManager.start(manifest.getInitialState());
     }
 
+    /**
+     * Stops the application gracefully.
+     */
     public void stop() {
+        if (this.app == null) {
+            return;
+        }
         this.app.exit();
     }
 
@@ -147,19 +177,35 @@ public class SimulationEngine extends ApplicationAdapter {
         this.errorState.dispose();
     }
 
+    /**
+     * Retrieves the current application width in pixel.
+     *
+     * @return The width of the application.
+     */
     public int getAppWidth()
     {
         return Gdx.graphics.getWidth();
     }
 
+    /**
+     * Retrieves the current application height in pixel.
+     *
+     * @return The height of the application.
+     */
     public int getAppHeight()
     {
         return Gdx.graphics.getHeight();
     }
 
-    private void handleProgramException(Exception exception) {
+    /**
+     * Handles exceptions that occur during the execution of the program.
+     *
+     * @param exception The exception to handle.
+     */
+    public void handleProgramException(Exception exception) {
         if (errorState.isActive()) {
             stop();
+            return;
         }
         errorState.enter(exception);
     }

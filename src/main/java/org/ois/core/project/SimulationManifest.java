@@ -25,7 +25,6 @@ public class SimulationManifest implements DataObject<SimulationManifest> {
      * This map must contain at least one entry.
      */
     private Map<String, String> states = new Hashtable<>();
-
     /** The set of supported platforms for the simulation, based on {@link RunnerConfiguration.RunnerType}. */
     private Set<RunnerConfiguration.RunnerType> platforms = new HashSet<>();
     /** The width of the screen the simulation needs, in pixels. */
@@ -76,6 +75,30 @@ public class SimulationManifest implements DataObject<SimulationManifest> {
         }
 
         return root;
+    }
+
+    // Setters and Getters
+
+    /**
+     * Sets the initial state of the project.
+     *
+     * @param initialState the initial state of the project.
+     * @return this {@link SimulationManifest} object.
+     */
+    public SimulationManifest setInitialState(String initialState) {
+        this.initialState = initialState;
+        return this;
+    }
+
+    /**
+     * Sets the states of the simulation.
+     *
+     * @param states A map of state keys to the class name of the corresponding `IState` implementation.
+     * @return this {@link SimulationManifest} object.
+     */
+    public SimulationManifest setStates(Map<String, String> states) {
+        this.states = states;
+        return this;
     }
 
     /**

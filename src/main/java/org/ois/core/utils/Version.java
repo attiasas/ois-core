@@ -3,13 +3,26 @@ package org.ois.core.utils;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * Represents a version in the format of "major.minor.patch".
+ * Provides methods to compare versions and check their validity.
+ */
 public class Version implements Serializable {
+    /** Constant representing a snapshot version. */
     public static final String SNAPSHOT = "SNAPSHOT";
+    /** Constant representing a version that is not found. */
     public static final Version NOT_FOUND = new Version("0.0.0");
-
+    /** The tokens representing the individual version components. */
     private final String[] tokens;
+    /** The full version string. */
     private final String version;
 
+    /**
+     * Constructs a Version object with the given version string.
+     *
+     * @param version the version string to be parsed (must not be null or blank).
+     * @throws IllegalArgumentException if the version string is null or blank.
+     */
     public Version(String version) {
         if (version == null || version.isBlank()) {
             throw new IllegalArgumentException("Provide a valid version");
@@ -18,10 +31,21 @@ public class Version implements Serializable {
         this.tokens = version.split("\\.");
     }
 
+    /**
+     * Checks if the version is valid.
+     *
+     * @return true if the version is not equal to {@link #NOT_FOUND}, false otherwise.
+     */
     public boolean isValid() {
         return !NOT_FOUND.equals(this.version);
     }
 
+    /**
+     * Compares this version to another version to check if it is at least that version.
+     *
+     * @param atLeast the version to compare against (can be null, which means always true).
+     * @return true if this version is at least the given version, false otherwise.
+     */
     public boolean isAtLeast(Version atLeast) {
         if (atLeast == null) {
             return true;
@@ -47,7 +71,15 @@ public class Version implements Serializable {
         return true;
     }
 
-    private int compareTokens(String toCheck, String atLeastToken) {
+    /**
+     * Compares two version tokens to determine their order.
+     *
+     * @param toCheck      the token of this version to compare.
+     * @param atLeastToken the token of the other version to compare against.
+     * @return a negative integer, zero, or a positive integer as this token
+     *         is less than, equal to, or greater than the specified token.
+     */
+    int compareTokens(String toCheck, String atLeastToken) {
         boolean toCheckIsBlank = toCheck == null || toCheck.isBlank();
         boolean atLeastTokenIsBlank = atLeastToken == null || atLeastToken.isBlank();
         if (toCheckIsBlank && atLeastTokenIsBlank) {
@@ -84,7 +116,13 @@ public class Version implements Serializable {
         return comparison;
     }
 
-    private boolean isNumeric(String str) {
+    /**
+     * Checks if the given string is numeric.
+     *
+     * @param str the string to check.
+     * @return true if the string is numeric, false otherwise.
+     */
+    boolean isNumeric(String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }
@@ -98,7 +136,13 @@ public class Version implements Serializable {
         return true;
     }
 
-    private boolean isAlphaNumeric(String str) {
+    /**
+     * Checks if the given string is alphanumeric.
+     *
+     * @param str the string to check.
+     * @return true if the string is alphanumeric, false otherwise.
+     */
+    boolean isAlphaNumeric(String str) {
         if (str == null || str.isEmpty()) {
             return false;
         }
@@ -112,6 +156,13 @@ public class Version implements Serializable {
         return true;
     }
 
+    /**
+     * Compares this version's numeric token to a specified numeric token.
+     *
+     * @param toCheck the token of this version to check.
+     * @param atLeast the token to compare against.
+     * @return a negative integer, zero, or a positive integer based on the comparison.
+     */
     private int compareToCheckToNumericAtLeast(String toCheck, String atLeast) {
         if (isNumeric(toCheck)) {
             return compareNumerals(toCheck, atLeast);
@@ -122,6 +173,13 @@ public class Version implements Serializable {
         return 1;
     }
 
+    /**
+     * Compares an alphanumeric token to a specified numeric token.
+     *
+     * @param toCheck the token of this version to check.
+     * @param atLeast the token to compare against.
+     * @return a negative integer, zero, or a positive integer based on the comparison.
+     */
     private int compareAlphaNumericToCheckToNumericAtLeast(String toCheck, String atLeast) {
         String toCheckFirstNumerals = getTokenFirstNumerals(toCheck);
         if (toCheckFirstNumerals.isBlank()) {
@@ -130,11 +188,24 @@ public class Version implements Serializable {
         return compareNumerals(toCheckFirstNumerals, atLeast);
     }
 
-    private int compareNumerals(String toCheck, String atLeast) {
+    /**
+     * Compares two numeral strings.
+     *
+     * @param toCheck the numeral string to compare.
+     * @param atLeast the other numeral string to compare against.
+     * @return a negative integer, zero, or a positive integer based on the comparison.
+     */
+    int compareNumerals(String toCheck, String atLeast) {
         return (Integer.valueOf(toCheck).compareTo(Integer.valueOf(atLeast)));
     }
 
-    private String getTokenFirstNumerals(String token) {
+    /**
+     * Extracts the leading numeric characters from a token.
+     *
+     * @param token the token to extract from.
+     * @return a string representing the leading numerals.
+     */
+    String getTokenFirstNumerals(String token) {
         char[] chars = token.toCharArray();
         StringBuilder numerals = new StringBuilder();
         for (char c : chars) {

@@ -7,15 +7,45 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * Utility class for creating ZIP archives.
+ * Provides methods to zip files and directories, with options for entry name filtering.
+ */
 public class ZipUtils {
+
+    /**
+     * Interface for converting a file or directory to a ZIP entry name.
+     */
     public interface ZipEntryConvertor {
+        /**
+         * Gets the entry name for a given file or directory if it is not filtered.
+         *
+         * @param item the file or directory to convert
+         * @return the entry name, or null if the item should be filtered
+         */
         String getEntryNameIfNotFiltered(File item);
     }
 
+    /**
+     * Zips the specified items into a ZIP archive at the target path.
+     * Uses the file name as the entry name.
+     *
+     * @param archiveTargetPath the path where the ZIP archive will be created
+     * @param itemsToZip the paths of the items to be zipped
+     * @throws IOException if an I/O error occurs during zipping
+     */
     public static void zipItems(Path archiveTargetPath, Path... itemsToZip) throws IOException {
         zipItems(archiveTargetPath, File::getName,itemsToZip);
     }
 
+    /**
+     * Zips the specified items into a ZIP archive at the target path, allowing for custom entry name conversion.
+     *
+     * @param archiveTargetPath the path where the ZIP archive will be created
+     * @param itemConvertor the converter used to determine entry names for the items
+     * @param itemsToZip the paths of the items to be zipped
+     * @throws IOException if an I/O error occurs during zipping
+     */
     public static void zipItems(Path archiveTargetPath, ZipEntryConvertor itemConvertor, Path... itemsToZip) throws IOException {
         try(FileOutputStream fos = new FileOutputStream(archiveTargetPath.toString());
             ZipOutputStream zipOut = new ZipOutputStream(fos)) {
@@ -35,6 +65,17 @@ public class ZipUtils {
         }
     }
 
+    /**
+     * Recursively zips a directory and its contents.
+     *
+     * @param dir the directory to zip
+     * @param itemConvertor the converter used to determine entry names for the items
+     * @param baseName the base name for entries within the directory
+     * @param zipOut the ZIP output stream to write to
+     * @param buffer a byte array used for reading file data
+     * @param addedEntries a set of already added entries to prevent duplicates
+     * @throws IOException if an I/O error occurs during zipping
+     */
     private static void zipDirectory(File dir, ZipEntryConvertor itemConvertor, String baseName, ZipOutputStream zipOut, byte[] buffer, Set<String> addedEntries) throws IOException {
         File[] files = dir.listFiles();
 
@@ -54,6 +95,17 @@ public class ZipUtils {
         }
     }
 
+    /**
+     * Zips a single file.
+     *
+     * @param file the file to zip
+     * @param itemConvertor the converter used to determine the entry name for the file
+     * @param baseName the base name for the entry
+     * @param zipOut the ZIP output stream to write to
+     * @param buffer a byte array used for reading file data
+     * @param addedEntries a set of already added entries to prevent duplicates
+     * @throws IOException if an I/O error occurs during zipping
+     */
     private static void zipFile(File file, ZipEntryConvertor itemConvertor, String baseName, ZipOutputStream zipOut, byte[] buffer, Set<String> addedEntries)
             throws IOException {
         String fileConvertedName = itemConvertor.getEntryNameIfNotFiltered(file);
