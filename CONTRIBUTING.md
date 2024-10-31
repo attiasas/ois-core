@@ -3,37 +3,21 @@
 To build the library sources, please follow these steps:
 
 1. Clone the code from Git.
-2. Build the plugin by running the following Gradle command:
-   <details open>
-   <summary>windows</summary>
+2. Build the library sources and publish it locally, run the following Gradle command:
+    <details open>
+    <summary>windows</summary>
 
     ```bash
-    ./gradlew.bat clean build
+    ./gradlew.bat publishToMavenLocal
     ```
-   </details>
-   <details>
-   <summary>Mac / Linux</summary>
-   
+    </details>
+    <details>
+    <summary>Mac / Linux</summary>
+
     ```bash
-    ./gradlew clean build
+    ./gradlew publishToMavenLocal
     ```
-   </details>
-
-To build the library sources and publish it locally, run the following Gradle command:
-<details open>
-<summary>windows</summary>
-
-```bash
-./gradlew.bat publishToMavenLocal
-```
-</details>
-<details>
-<summary>Mac / Linux</summary>
-
-```bash
-./gradlew publishToMavenLocal
-```
-</details>
+    </details>
 
 ---
 

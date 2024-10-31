@@ -2,7 +2,7 @@
 
 # open-interactive-simulation-core
 
-[![Test](https://github.com/attiasas/ois-core/actions/workflows/test.yml/badge.svg)](https://github.com/attiasas/open-interactive-simulation-core/actions/workflows/test.yml?branch=master)
+[![Test](https://github.com/attiasas/ois-core/actions/workflows/test.yml/badge.svg)](https://github.com/attiasas/ois-core/actions/workflows/test.yml?branch=master)
 
 </div>
 
