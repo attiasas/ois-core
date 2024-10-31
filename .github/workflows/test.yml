@@ -1,0 +1,40 @@
+name: "Test"
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # Install required tools
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "corretto"
+          java-version: "11"
+      - name: Give permission to gradlew
+        run: chmod +x gradlew
+        if: runner.os != 'Windows'
+      # Run tests
+      - name: Tests on macOS, Linux
+        run: ./gradlew clean test
+        if: runner.os != 'Windows'
+      - name: Tests on Windows
+        run: ./gradlew.bat clean test
+        if: runner.os == 'Windows'

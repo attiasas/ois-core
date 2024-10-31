@@ -1,0 +1,54 @@
+name: "Test HTML Reflection not broken"
+# Some classes may not reflect, to make sure we are not breaking the runners we search for known blacklist imports
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-blacklist-imports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # Install required tools
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "corretto"
+          java-version: "11"
+
+      - name: Define blacklisted packages and directories
+        run: |
+          # List of forbidden imports (blacklisted packages)
+          BLACKLIST=("java.nio.file")
+          
+          # List of relative directories to search (after java/)
+          RELATIVE_SEARCH_DIRS=("runner" "state" "project" "tools" "utils/io/data" "utils/log")
+          
+          # Base directory
+          BASE_DIR="src/main/java/org/ois/core"
+          
+          # Loop over the blacklist
+          for forbidden_pkg in "${BLACKLIST[@]}"; do
+            # Search for forbidden imports in the specified relative directories
+            for dir in "${RELATIVE_SEARCH_DIRS[@]}"; do
+              FULL_PATH="$BASE_DIR/$dir"
+              if grep -rnw "$FULL_PATH" -e "import $forbidden_pkg" --include \*.java; then
+                echo "Error: Found forbidden import: $forbidden_pkg in $dir"
+                exit 1
+              fi
+            done
+          done
+          
+          echo "No forbidden imports found."
