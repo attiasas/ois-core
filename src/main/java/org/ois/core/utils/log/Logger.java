@@ -5,6 +5,7 @@ import org.ois.core.OIS;
 import org.ois.core.runner.RunnerConfiguration;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Logger implementation for logging messages with various severity levels.
@@ -16,11 +17,18 @@ import java.util.*;
 public class Logger<T> implements ILogger {
     private static final Map<Class, Logger> logMap = new HashMap<>();
 
-    private static final Set<String> allowedTopics = new HashSet<>();
-    private static final ILogger.Level DEFAULT_LEVEL = Level.Info;
-    private static int minLogLevel = DEFAULT_LEVEL.ordinal();
+    private static final Set<String> allowedTopics = getInitialTopics();
+    private static int minLogLevel = ILogger.toLogLevel(System.getenv(ENV_LOG_LEVEL)).ordinal();
 
     private final Class<T> logClass;
+
+    private static Set<String> getInitialTopics() {
+        String topics = System.getenv(ENV_LOG_TOPICS);
+        if (topics == null) {
+            return new HashSet<>();
+        }
+        return Arrays.stream(topics.split(";")).collect(Collectors.toSet());
+    }
 
     /**
      * Private constructor for creating a logger instance.

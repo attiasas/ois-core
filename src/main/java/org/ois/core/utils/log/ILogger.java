@@ -7,6 +7,13 @@ package org.ois.core.utils.log;
  * warn, and error.
  */
 public interface ILogger {
+    /** Environment variable used by OIS products to set the log level **/
+    String ENV_LOG_LEVEL = "OIS_LOG_LEVEL";
+    /** Environment variable used by OIS products to set the log topics **/
+    String ENV_LOG_TOPICS = "OIS_LOG_TOPICS";
+    /** The default level of the logger **/
+    Level DEFAULT_LEVEL = Level.Info;
+
     /**
      * Enumeration representing the different log levels.
      */
@@ -22,15 +29,20 @@ public interface ILogger {
      * @return the corresponding {@link Level} enum value
      */
     static Level toLogLevel(String logLevel) {
+        if (logLevel == null) {
+            return DEFAULT_LEVEL;
+        }
         switch (logLevel.trim().toLowerCase()) {
             case "debug":
                 return Level.Debug;
+            case "info":
+                return Level.Info;
             case "warn":
                 return Level.Warn;
             case "error":
                 return Level.Error;
             default:
-                return Level.Info;
+                return DEFAULT_LEVEL;
         }
     }
 
