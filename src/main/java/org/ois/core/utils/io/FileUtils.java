@@ -20,9 +20,9 @@ public class FileUtils {
      * @return true if the file was copied successfully, false otherwise
      * @throws IOException if an I/O error occurs
      */
-    public static boolean copyFile(InputStream src, Path target, boolean failIfCantCreate) throws IOException {
+    public static boolean copyFile(InputStream src, Path target, boolean failIfCantCreate, CopyOption... options) throws IOException {
         try {
-            Files.copy(src, target);
+            Files.copy(src, target, options);
             return true;
         } catch (Exception e) {
             if (failIfCantCreate){
@@ -41,9 +41,9 @@ public class FileUtils {
      * @return true if the file was copied successfully, false otherwise
      * @throws IOException if an I/O error occurs
      */
-    public static boolean copyFile(Path src, Path target, boolean failIfCantCreate) throws IOException {
+    public static boolean copyFile(Path src, Path target, boolean failIfCantCreate, CopyOption... options) throws IOException {
         try {
-            Files.copy(src, target);
+            Files.copy(src, target, options);
             return true;
         } catch (Exception e) {
             if (failIfCantCreate){
