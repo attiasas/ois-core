@@ -244,6 +244,7 @@ public class StateManager {
      */
     private void handleCurrentStateException(String topic, Exception e) throws Exception {
         if (this.stateStack.isEmpty()) {
+            // If error caught when entering a single state, the state is not current and stack is empty
             throw e;
         }
         String outState = this.stateStack.peek();
