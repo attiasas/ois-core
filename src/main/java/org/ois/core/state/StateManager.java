@@ -66,6 +66,10 @@ public class StateManager {
         if (key == null || !this.states.containsKey(key)) {
             throw new IllegalArgumentException("Can't find state '" + key + "' in the registered states.");
         }
+        if (key.equals(getCurrentStateKey())) {
+            // The current state is the key that requesting to change, no need to change
+            return;
+        }
         nextState = key;
         nextStateParams = params;
     }
@@ -283,6 +287,18 @@ public class StateManager {
             return null;
         }
         return this.states.get(this.stateStack.peek());
+    }
+
+    /**
+     * Returns the current active state key.
+     *
+     * @return the current state key, or null if no active state exists
+     */
+    public String getCurrentStateKey() {
+        if (!hasActiveState()) {
+            return null;
+        }
+        return this.stateStack.peek();
     }
 
     /**
