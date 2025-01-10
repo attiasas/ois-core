@@ -54,6 +54,9 @@ public class SimulationEngineTest {
         engine.create();
         // Check if the states are loaded
         Assert.assertTrue(engine.stateManager.states().contains("state1"), "State 'state1' should be loaded.");
+        // Load only takes affect after update
+        Assert.assertNull(engine.stateManager.getCurrentState());
+        Assert.assertTrue(engine.stateManager.update(0));
         // Make sure it was created with reflection and entered the state
         Assert.assertTrue(((ErrorState)engine.stateManager.getCurrentState()).isActive());
     }
@@ -87,6 +90,13 @@ public class SimulationEngineTest {
 
         engine.create();
 
+        // Load only takes affect after update
+        Assert.assertNull(engine.stateManager.getCurrentState());
+        try {
+            Assert.assertTrue(engine.stateManager.update(0));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         MockState currentState = (MockState) engine.stateManager.getCurrentState();
         currentState.throwErr = true;
 
@@ -102,6 +112,14 @@ public class SimulationEngineTest {
         engine.stateManager.registerState("mockState", new MockState());
         engine.stateManager.start("mockState");
 
+        // Load only takes affect after update
+        Assert.assertNull(engine.stateManager.getCurrentState());
+        try {
+            Assert.assertTrue(engine.stateManager.update(0));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         engine.resize(800, 600); // Resize without error state
         Assert.assertFalse(engine.errorState.isActive(), "ErrorState should not be active during resize without an exception.");
 
@@ -115,6 +133,14 @@ public class SimulationEngineTest {
         // Test that dispose is called on both the state manager and error state
         engine.stateManager.registerState("mockState", new MockState());
         engine.stateManager.start("mockState");
+
+        // Load only takes affect after update
+        Assert.assertNull(engine.stateManager.getCurrentState());
+        try {
+            Assert.assertTrue(engine.stateManager.update(0));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         engine.dispose();
         Assert.assertFalse(engine.errorState.isActive(), "ErrorState should be disposed and inactive.");
