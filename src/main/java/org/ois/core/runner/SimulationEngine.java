@@ -126,6 +126,9 @@ public class SimulationEngine extends ApplicationAdapter {
             }
             if (stateManager.update(dt)) {
                 stateManager.render();
+            } else {
+                // No Active states
+                stop();
             }
         } catch (Exception e) {
             handleProgramException(e);
