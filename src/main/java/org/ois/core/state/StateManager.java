@@ -21,6 +21,9 @@ public class StateManager {
     /** Active state stack by keys **/
     private final Stack<String> stateStack = new Stack<>();
 
+    private String nextState;
+    private Object[] nextStateParams;
+
     // Container management
 
     /**
@@ -63,10 +66,26 @@ public class StateManager {
         if (key == null || !this.states.containsKey(key)) {
             throw new IllegalArgumentException("Can't find state '" + key + "' in the registered states.");
         }
+        if (key.equals(getCurrentStateKey())) {
+            // The current state is the key that requesting to change, no need to change
+            return;
+        }
+        nextState = key;
+        nextStateParams = params;
+    }
+
+    private void changeToNextState() {
+        if (nextState == null) {
+            // Change state was not requested
+            return;
+        }
         while (hasActiveState()) {
             exitCurrentState();
         }
-        enterState(key, params);
+        enterState(nextState, nextStateParams);
+        // Reset
+        nextState = null;
+        nextStateParams = null;
     }
 
     /**
@@ -125,6 +144,9 @@ public class StateManager {
      * @throws Exception if an error occurs during the state update
      */
     public boolean update(float delta) throws Exception {
+        // Change states if needed
+        changeToNextState();
+        // Get current
         IState current = getCurrentState();
         if (current == null) {
             return false;
@@ -269,6 +291,18 @@ public class StateManager {
             return null;
         }
         return this.states.get(this.stateStack.peek());
+    }
+
+    /**
+     * Returns the current active state key.
+     *
+     * @return the current state key, or null if no active state exists
+     */
+    public String getCurrentStateKey() {
+        if (!hasActiveState()) {
+            return null;
+        }
+        return this.stateStack.peek();
     }
 
     /**

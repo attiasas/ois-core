@@ -4,8 +4,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
-import java.util.Stack;
-
 public class StateManagerTest {
 
     private StateManager stateManager;
@@ -16,8 +14,8 @@ public class StateManagerTest {
     @BeforeMethod
     public void setUp() {
         stateManager = new StateManager();
-        initialState = new TestState("initial");
-        secondState = new TestState("second");
+        initialState = new TestState();
+        secondState = new TestState();
         exceptionState = new ExceptionState("exceptionState");
     }
 
@@ -30,7 +28,7 @@ public class StateManagerTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRegisterStateWithDuplicateKey() {
         stateManager.registerState("initial", initialState);
-        stateManager.registerState("initial", new TestState("duplicate"));
+        stateManager.registerState("initial", new TestState());
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -39,22 +37,35 @@ public class StateManagerTest {
     }
 
     @Test
-    public void testStartState() {
+    public void testStartState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.start("initial");
+        // Before update
+        assertNull(stateManager.getCurrentState());
+        assertFalse(initialState.hasEntered);
+        stateManager.update(0);
+        // After update
         assertEquals(stateManager.getCurrentState(), initialState);
         assertTrue(initialState.hasEntered);
     }
 
     @Test
-    public void testChangeState() {
+    public void testChangeState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.registerState("second", secondState);
-
         stateManager.start("initial");
+        // Before update
         assertFalse(secondState.hasEntered);
-
+        assertFalse(initialState.hasEntered);
+        stateManager.update(0);
+        // After update
+        assertTrue(initialState.hasEntered);
         stateManager.changeState("second");
+        // Before update, after change state
+        assertEquals(stateManager.getCurrentState(), initialState);
+        assertFalse(secondState.hasEntered);
+        stateManager.update(0);
+        // After update
         assertEquals(stateManager.getCurrentState(), secondState);
         assertTrue(secondState.hasEntered);
     }
@@ -65,13 +76,19 @@ public class StateManagerTest {
     }
 
     @Test
-    public void testExitCurrentStateOnChange() {
+    public void testExitCurrentStateOnChange() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.registerState("second", secondState);
 
         stateManager.start("initial");
+        stateManager.update(0);
         stateManager.changeState("second");
-
+        // Before update
+        assertFalse(initialState.hasExited);
+        assertFalse(secondState.hasEntered);
+        assertTrue(stateManager.hasActiveState());
+        stateManager.update(0);
+        // After update
         assertTrue(initialState.hasExited);
         assertTrue(secondState.hasEntered);
         assertTrue(stateManager.hasActiveState());
@@ -90,7 +107,7 @@ public class StateManagerTest {
     public void testRenderCurrentState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.start("initial");
-
+        assertTrue(stateManager.update(0.1f));
         stateManager.render();
         assertTrue(initialState.hasRendered);
     }
@@ -99,6 +116,7 @@ public class StateManagerTest {
     public void testPauseResumeState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.start("initial");
+        assertTrue(stateManager.update(0.1f));
 
         stateManager.pause();
         assertTrue(initialState.hasPaused);
@@ -111,6 +129,7 @@ public class StateManagerTest {
     public void testResizeState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.start("initial");
+        assertTrue(stateManager.update(0.1f));
 
         stateManager.resize(800, 600);
         assertEquals(initialState.width, 800);
@@ -121,6 +140,7 @@ public class StateManagerTest {
     public void testDisposeState() throws Exception {
         stateManager.registerState("initial", initialState);
         stateManager.start("initial");
+        assertTrue(stateManager.update(0.1f));
 
         stateManager.dispose();
         assertTrue(initialState.hasExited);
@@ -128,7 +148,7 @@ public class StateManagerTest {
     }
 
     @Test(expectedExceptions = RuntimeException.class)
-    public void testEnterStateThrowsException() {
+    public void testEnterStateThrowsException() throws Exception {
         // Simulate exception during state enter
         exceptionState.throwOnEnter = true;
 
@@ -136,6 +156,7 @@ public class StateManagerTest {
 
         // This should throw a RuntimeException due to exception in state enter
         stateManager.start("exception");
+        stateManager.update(0.1f);
     }
 
     @Test(expectedExceptions = Exception.class)
@@ -157,6 +178,7 @@ public class StateManagerTest {
 
         stateManager.registerState("exception", exceptionState);
         stateManager.start("exception");
+        stateManager.update(0.1f);
 
         // This should throw a RuntimeException due to exception in state render
         stateManager.render();
@@ -176,7 +198,7 @@ public class StateManagerTest {
         @Override
         public void enter(Object... params) {
             if (throwOnEnter) {
-                throw new RuntimeException("Exception in enter state");
+                throw new RuntimeException("Exception in enter state " + name);
             }
         }
 
@@ -188,7 +210,7 @@ public class StateManagerTest {
         @Override
         public boolean update(float delta) {
             if (throwOnUpdate) {
-                throw new RuntimeException("Exception in update state");
+                throw new RuntimeException("Exception in update state " + name);
             }
             return true;
         }
@@ -196,7 +218,7 @@ public class StateManagerTest {
         @Override
         public void render() {
             if (throwOnRender) {
-                throw new RuntimeException("Exception in render state");
+                throw new RuntimeException("Exception in render state " + name);
             }
         }
 
@@ -223,7 +245,6 @@ public class StateManagerTest {
 
     // Mock test class representing IState
     private static class TestState implements IState {
-        private final String name;
         boolean hasEntered = false;
         boolean hasExited = false;
         boolean hasUpdated = false;
@@ -233,9 +254,7 @@ public class StateManagerTest {
         boolean hasDisposed = false;
         int width, height;
 
-        public TestState(String name) {
-            this.name = name;
-        }
+        public TestState() {}
 
         @Override
         public void enter(Object... params) {
