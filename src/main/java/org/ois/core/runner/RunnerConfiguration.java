@@ -136,7 +136,7 @@ public class RunnerConfiguration {
      *
      * @return true if set to run on debug mode or provided with dev mode directory
      */
-    public boolean getDebugMode() { return this.debugMode || !this.devModeDir.isBlank(); }
+    public boolean getDebugMode() { return this.debugMode || (this.devModeDir != null && !this.devModeDir.isBlank()); }
 
     /**
      * Retrieves the configured dev mode directory to be used at the engine
