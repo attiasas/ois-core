@@ -41,7 +41,12 @@ public class RunnerConfiguration {
 
     private ILogger.Level logLevel;
     private String[] logTopics;
+
+    private boolean debugMode;
+    private String devModeDir;
+
     private RunnerType type;
+
     private SimulationManifest simulationManifest;
 
     /**
@@ -85,6 +90,21 @@ public class RunnerConfiguration {
     }
 
     /**
+     * Sets the engine to run on debug mode
+     *
+     * @param debugMode The mode to run the engine with
+     */
+    public void setDebugMode(boolean debugMode) { this.debugMode = debugMode; }
+
+    /**
+     * Sets the directory to run dev mode with.
+     * If value is not empty engine will also run on debug mode.
+     *
+     * @param devModeDir The directory that the engine will use for dev mode.
+     */
+    public void setDevModeDir(String devModeDir) { this.devModeDir = devModeDir; }
+
+    /**
      * Retrieves the log topics set for this runner configuration.
      *
      * @return An array of log topics.
@@ -110,6 +130,20 @@ public class RunnerConfiguration {
     public RunnerType getType() {
         return this.type;
     }
+
+    /**
+     * Check if the engine should run in debug mode.
+     *
+     * @return true if set to run on debug mode or provided with dev mode directory
+     */
+    public boolean getDebugMode() { return this.debugMode || !this.devModeDir.isBlank(); }
+
+    /**
+     * Retrieves the configured dev mode directory to be used at the engine
+     *
+     * @return the path to the directory to be used at dev mode if exists
+     */
+    public String getDevModeDir() { return this.devModeDir; }
 
     /**
      * Retrieves the simulation manifest associated with this runner configuration.
