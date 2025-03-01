@@ -12,6 +12,7 @@ import java.util.Map;
 /** Shared entities information of the simulation project between all states **/
 public class Entities {
     private static final Logger<Entities> log = Logger.get(Entities.class);
+    public static final String LOG_TOPIC = "entities";
 
     /** The directory name inside the simulation directory that holds all the project entities blueprints for the simulation **/
     public static final String ENTITIES_DIRECTORY = "entities";
@@ -34,7 +35,7 @@ public class Entities {
             // Nothing to do
             return;
         }
-        log.debug("Loading Project entities blueprints");
+        log.debug(LOG_TOPIC, "Loading Project entities blueprints");
         for (FileHandle fileHandle : entitiesDirContent) {
             String entityType = fileHandle.name();
             if (!fileHandle.isDirectory()) {
@@ -51,9 +52,9 @@ public class Entities {
                 throw new RuntimeException(String.format("Can't load '%s' blueprint", entityType));
             }
             String rawData = new String(data);
-            log.debug(String.format("'%s' Blueprint: %s", entityType, rawData));
+            log.debug(LOG_TOPIC, String.format("'%s' Blueprint: %s", entityType, rawData));
             blueprints.put(entityType, JsonFormat.compact().load(new EntityBlueprint(entityType), rawData));
         }
-        log.debug(String.format("Loaded '%d' entities blueprints", blueprints.size()));
+        log.debug(LOG_TOPIC, String.format("Loaded '%d' entities blueprints", blueprints.size()));
     }
 }
