@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.reflect.ReflectionException;
 import org.ois.core.OIS;
 import org.ois.core.debug.DebugManager;
 import org.ois.core.debug.DevModeState;
+import org.ois.core.project.Entities;
 import org.ois.core.project.SimulationManifest;
 import org.ois.core.state.ErrorState;
 import org.ois.core.state.IState;
@@ -93,7 +94,7 @@ public class SimulationEngine extends ApplicationAdapter {
        if (manifest == null) {
            // For HTML, at Launcher we don't have access to resources.
            // This is the first time after the resources are available.
-            log.info("Loading Project Manifest");
+           log.info("Loading Project Manifest");
            byte[] data = Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes();
            if (data == null) {
                throw new RuntimeException("Can't load project manifest");
@@ -102,6 +103,8 @@ public class SimulationEngine extends ApplicationAdapter {
            configuration.setSimulationManifest(JsonFormat.compact().load(new SimulationManifest(), data));
            manifest = configuration.getSimulationManifest();
        }
+       // Load project entity blueprints
+        Entities.loadBlueprints();
         log.info("Loading Project states to manager");
         for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
             IState state = ReflectionUtils.newInstance(entry.getValue());

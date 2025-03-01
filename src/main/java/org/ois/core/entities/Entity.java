@@ -7,30 +7,27 @@ import org.ois.core.utils.log.Logger;
 
 import java.util.Objects;
 
-public class Entity {
+public class Entity implements DataObject<Entity> {
 
     private final static Logger<Entity> log = Logger.get(Entity.class);
 
-    public final String name;
+    public final String type;
 
     public final ID id;
 
     private boolean enabled;
 
-    protected Entity() {
-        this("");
-    }
-
-    protected Entity(String name) {
-        this.name = name;
-        this.id = ID.generate(name);
+    protected Entity(String type) {
+        this.type = type;
+        this.id = ID.generate(type);
+        this.enabled = true;
     }
 
     public void update() {
         if (!this.enabled) {
             return;
         }
-        log.info(String.format("{ Type: '%s', ID: '%s' }", this.name, this.id));
+        log.info(String.format("{ Type: '%s', ID: '%s' }", this.type, this.id));
     }
 
     @Override
@@ -52,31 +49,24 @@ public class Entity {
 
     public boolean isEnabled() { return this.enabled; }
 
-    public DataObject<Entity> getBlueprint() {
-        final String className = getClass().getName();
+    @Override
+    public Entity loadData(DataNode data) {
+        if (data == null || !data.contains("type")) {
+            throw new RuntimeException("entity 'type' not provided");
+        }
+        Entity entity = new Entity(data.getProperty("type").getString());
 
-        return new DataObject<>() {
-            @Override
-            public Entity loadData(DataNode data) {
-                if (data == null || !data.contains("type")) {
-                    throw new RuntimeException("entity 'type' not provided");
-                }
-                Entity entity = new Entity(data.getProperty("type").getString());
+        entity.setEnabled(data.getProperty("enable").getBoolean());
 
-                entity.setEnabled(data.getProperty("enable").getBoolean());
+        return entity;
+    }
 
-                return entity;
-            }
-
-            @Override
-            public DataNode convertToDataNode() {
-                DataNode root = DataNode.Object();
-                // Add attributes
-                root.set("class", className);
-                root.set("type", name);
-                root.set("enable", enabled);
-                return root;
-            }
-        };
+    @Override
+    public DataNode convertToDataNode() {
+        DataNode root = DataNode.Object();
+        // Add attributes
+        root.set("type", type);
+        root.set("enable", enabled);
+        return root;
     }
 }
