@@ -9,6 +9,7 @@ import org.ois.core.debug.DebugManager;
 import org.ois.core.debug.DevModeState;
 import org.ois.core.project.Entities;
 import org.ois.core.project.SimulationManifest;
+import org.ois.core.project.States;
 import org.ois.core.state.ErrorState;
 import org.ois.core.state.IState;
 import org.ois.core.state.StateManager;
@@ -70,6 +71,10 @@ public class SimulationEngine extends ApplicationAdapter {
         Logger.setTopics(this.configuration.getLogTopics());
 
         try {
+            if (configuration.getDebugMode()) {
+                debugManager = new DebugManager(configuration.getDevModeDir());
+                log.info(String.format("Engine running project in debug-mode (dev=%b)", debugManager.isDevMode()));
+            }
             loadProject();
         } catch (Exception e) {
             handleProgramException(new RuntimeException("Can't initialize engine", e));
@@ -86,36 +91,43 @@ public class SimulationEngine extends ApplicationAdapter {
      * @throws IllegalAccessException if access to the method or constructor is denied.
      */
     public void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-       if (configuration.getDebugMode()) {
-           debugManager = new DebugManager(configuration.getDevModeDir());
-           log.info(String.format("Engine running project in debug-mode (dev=%b)", debugManager.isDevMode()));
-       }
-       SimulationManifest manifest = configuration.getSimulationManifest();
-       if (manifest == null) {
-           // For HTML, at Launcher we don't have access to resources.
-           // This is the first time after the resources are available.
-           log.info("Loading Project Manifest");
-           byte[] data = Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes();
-           if (data == null) {
-               throw new RuntimeException("Can't load project manifest");
-           }
-           log.debug("Manifest:\n" + new String(data));
-           configuration.setSimulationManifest(JsonFormat.compact().load(new SimulationManifest(), data));
-           manifest = configuration.getSimulationManifest();
-       }
+       // Get/Load project manifest
+       SimulationManifest manifest = getSimulationManifest();
        // Load project entity blueprints
-        Entities.loadBlueprints();
+       Entities.loadBlueprints();
+
         log.info("Loading Project states to manager");
         for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
-            IState state = ReflectionUtils.newInstance(entry.getValue());
-            if (debugManager != null && debugManager.isDevMode()) {
-                state = new DevModeState(state);
-            }
-            this.stateManager.registerState(entry.getKey(), state);
+            this.stateManager.registerState(entry.getKey(), loadState(entry));
             log.debug("State '" + entry.getKey() + "' loaded");
         }
         log.info("Loading completed");
         this.stateManager.start(manifest.getInitialState());
+    }
+
+    private SimulationManifest getSimulationManifest() {
+        SimulationManifest manifest = configuration.getSimulationManifest();
+        if (manifest != null) {
+            return manifest;
+        }
+        // For HTML, at Launcher we don't have access to resources.
+        // This is the first time after the resources are available.
+        log.info("Loading Project Manifest");
+        byte[] data = Gdx.files.internal(SimulationManifest.DEFAULT_FILE_NAME).readBytes();
+        if (data == null) {
+            throw new RuntimeException("Can't load project manifest");
+        }
+        log.debug("Manifest:\n" + new String(data));
+        configuration.setSimulationManifest(JsonFormat.compact().load(new SimulationManifest(), data));
+        return configuration.getSimulationManifest();
+    }
+
+    private IState loadState(Map.Entry<String, String> stateInfo) throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        IState state = States.loadState(stateInfo.getKey(), stateInfo.getValue());
+        if (debugManager != null && debugManager.isDevMode()) {
+            state = new DevModeState(state);
+        }
+        return state;
     }
 
     /**
