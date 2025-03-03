@@ -52,7 +52,8 @@ public class Entity implements DataObject<Entity> {
     @Override
     public Entity loadData(DataNode data) {
 
-        setEnabled(data.getProperty("enable").getBoolean());
+        // Default value: enable = true
+        setEnabled(!data.contains("enable") || data.getProperty("enable").getBoolean());
 
         return this;
     }
