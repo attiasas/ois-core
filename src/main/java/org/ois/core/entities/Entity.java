@@ -51,14 +51,10 @@ public class Entity implements DataObject<Entity> {
 
     @Override
     public Entity loadData(DataNode data) {
-        if (data == null || !data.contains("type")) {
-            throw new RuntimeException("entity 'type' not provided");
-        }
-        Entity entity = new Entity(data.getProperty("type").getString());
 
-        entity.setEnabled(data.getProperty("enable").getBoolean());
+        setEnabled(data.getProperty("enable").getBoolean());
 
-        return entity;
+        return this;
     }
 
     @Override

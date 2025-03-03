@@ -3,6 +3,8 @@ package org.ois.core.project;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import org.ois.core.entities.EntityBlueprint;
+import org.ois.core.entities.EntityManager;
+import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.formats.JsonFormat;
 import org.ois.core.utils.log.Logger;
 
@@ -56,5 +58,25 @@ public class Entities {
             blueprints.put(entityType, JsonFormat.compact().load(new EntityBlueprint(entityType), rawData));
         }
         log.debug(LOG_TOPIC, String.format("Loaded '%d' entities blueprints", blueprints.size()));
+    }
+
+    public static EntityManager loadManager(FileHandle stateManifestDir) {
+        EntityManager manager = new EntityManager();
+        FileHandle entityManagerManifest = stateManifestDir.child("entities.manifest.ois");
+        if (entityManagerManifest.exists() && !entityManagerManifest.isDirectory()) {
+            log.debug(String.format("found entities manifest at: %s", entityManagerManifest));
+            manager.setManifest(entityManagerManifest);
+        }
+        return manager;
+    }
+
+    public static DataNode loadManifest(FileHandle entityManagerManifest) {
+        byte[] data = entityManagerManifest.readBytes();
+        if (data == null) {
+            throw new RuntimeException(String.format("Can't load state '%s'", entityManagerManifest));
+        }
+        String rawData = new String(data);
+        log.debug(LOG_TOPIC, String.format("Loaded entities manifest: %s", rawData));
+        return JsonFormat.compact().deserialize(rawData);
     }
 }
