@@ -6,7 +6,7 @@ import org.ois.core.utils.io.data.DataObject;
 
 public abstract class ManagedState implements IManagedState, DataObject<ManagedState> {
 
-    protected EntityManager entityManager = new EntityManager();
+    protected EntityManager entityManager;
 
     @Override
     public void enter(Object... parameters) {
@@ -41,6 +41,15 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
     @Override
     public void resume() {}
 
+    @Override
+    public void setEntityManager(EntityManager manager) {
+        this.entityManager = manager;
+    }
+
+    @Override
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
 
     @Override
     public ManagedState loadData(DataNode data) {
