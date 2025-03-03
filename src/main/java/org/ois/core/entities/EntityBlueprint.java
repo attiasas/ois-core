@@ -4,6 +4,8 @@ import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.DataObject;
 
+import java.util.Map;
+
 public class EntityBlueprint implements Blueprint<Entity>, DataObject<EntityBlueprint> {
 
     private final String type;
@@ -13,17 +15,16 @@ public class EntityBlueprint implements Blueprint<Entity>, DataObject<EntityBlue
     }
 
     @Override
-    public Entity create(Object... ignored) {
+    public Entity create(Map<String,Object> params) {
+        if (params != null && params.containsKey("type")) {
+            return new Entity((String) params.getOrDefault("type", type));
+        }
         return new Entity(type);
     }
 
     @Override
     public EntityBlueprint loadData(DataNode data) {
-        String dataType = this.type;
-        if (data.contains("type")) {
-            dataType = data.getProperty("type").getString();
-        }
-        return new EntityBlueprint(dataType);
+        return this;
     }
 
     @Override
