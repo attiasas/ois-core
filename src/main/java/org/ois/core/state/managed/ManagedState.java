@@ -54,7 +54,12 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
     @Override
     public ManagedState loadData(DataNode data) {
 
-        entityManager.loadData(data.getProperty("entityManager"));
+        if (data.contains("entityManager")) {
+            if (entityManager == null) {
+                entityManager = new EntityManager();
+            }
+            entityManager.loadData(data.getProperty("entityManager"));
+        }
 
         return this;
     }
@@ -63,7 +68,9 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
     public DataNode convertToDataNode() {
         DataNode root = DataNode.Object();
 
-        root.set("entityManager", entityManager.convertToDataNode());
+        if (entityManager != null) {
+            root.set("entityManager", entityManager.convertToDataNode());
+        }
 
         return root;
     }
