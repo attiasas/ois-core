@@ -10,7 +10,7 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
 
     @Override
     public void enter(Object... parameters) {
-
+        entityManager.loadManifest(true);
     }
 
     @Override
@@ -20,7 +20,7 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
 
     @Override
     public void dispose() {
-
+        entityManager.dispose();
     }
 
     @Override
@@ -30,19 +30,7 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
     }
 
     @Override
-    public void render() {
-
-    }
-
-    @Override
-    public ManagedState loadData(DataNode data) {
-        return null;
-    }
-
-    @Override
-    public DataNode convertToDataNode() {
-        return null;
-    }
+    public void render() {}
 
     @Override
     public void resize(int width, int height) {}
@@ -52,4 +40,23 @@ public abstract class ManagedState implements IManagedState, DataObject<ManagedS
 
     @Override
     public void resume() {}
+
+
+    @Override
+    public ManagedState loadData(DataNode data) {
+
+        entityManager.loadData(data.getProperty("entityManager"));
+
+        return this;
+    }
+
+    @Override
+    public DataNode convertToDataNode() {
+        DataNode root = DataNode.Object();
+
+        root.set("entityManager", entityManager.convertToDataNode());
+
+        return root;
+    }
+
 }

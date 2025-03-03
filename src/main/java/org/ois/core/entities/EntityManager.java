@@ -1,6 +1,7 @@
 package org.ois.core.entities;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Disposable;
 import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
 import org.ois.core.utils.io.data.DataNode;
@@ -8,7 +9,7 @@ import org.ois.core.utils.io.data.DataObject;
 
 import java.util.*;
 
-public class EntityManager implements DataObject<EntityManager> {
+public class EntityManager implements DataObject<EntityManager>, Disposable {
 
     Map<String, Map<ID, Entity>> entities = new Hashtable<>();
 
@@ -65,7 +66,6 @@ public class EntityManager implements DataObject<EntityManager> {
     }
 
     public Collection<Entity> get(String type) {
-        List<Entity> typeInstances = new ArrayList<>();
         if (!entities.containsKey(type)) {
             return List.of();
         }
@@ -125,5 +125,17 @@ public class EntityManager implements DataObject<EntityManager> {
         }
 
         return root;
+    }
+
+    @Override
+    public void dispose() {
+        for (Map<ID, Entity> typeInstances : entities.values()) {
+            for (Entity entity : typeInstances.values()) {
+                if (entity instanceof Disposable) {
+                    ((Disposable) entity).dispose();
+                }
+            }
+        }
+        clear();
     }
 }
