@@ -26,7 +26,7 @@ public class DebugManager implements Disposable {
     }
 
     public boolean isDevMode() {
-        return !this.devModeDir.isBlank();
+        return this.devModeDir != null && !this.devModeDir.isBlank();
     }
 
     public void render() {
