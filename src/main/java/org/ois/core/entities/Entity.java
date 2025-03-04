@@ -1,5 +1,6 @@
 package org.ois.core.entities;
 
+import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.DataObject;
@@ -27,7 +28,7 @@ public class Entity implements DataObject<Entity> {
         if (!this.enabled) {
             return;
         }
-        log.info(String.format("{ Type: '%s', ID: '%s' }", this.type, this.id));
+        log.debug(Entities.LOG_TOPIC, String.format("{ Type: '%s', ID: '%s' }", this.type, this.id));
     }
 
     @Override

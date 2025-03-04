@@ -2,14 +2,11 @@ package org.ois.core.state.managed;
 
 import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.DataObject;
 
-import java.util.Map;
-
-public class StateBlueprint implements Blueprint<ManagedState>, DataObject<StateBlueprint> {
+public class StateBlueprint implements Blueprint<ManagedState> {
 
     @Override
-    public ManagedState create(Map<String,Object> ignored) {
+    public ManagedState create() {
         return null;
     }
 

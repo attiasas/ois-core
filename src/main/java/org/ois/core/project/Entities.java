@@ -2,8 +2,10 @@ package org.ois.core.project;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import org.ois.core.entities.Entity;
 import org.ois.core.entities.EntityBlueprint;
 import org.ois.core.entities.EntityManager;
+import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.formats.JsonFormat;
 import org.ois.core.utils.log.Logger;
@@ -19,9 +21,9 @@ public class Entities {
     /** The directory name inside the simulation directory that holds all the project entities blueprints for the simulation **/
     public static final String ENTITIES_DIRECTORY = "entities";
 
-    private static final Map<String, EntityBlueprint> blueprints = new Hashtable<>();
+    private static final Map<String, Blueprint<Entity>> blueprints = new Hashtable<>();
 
-    public static EntityBlueprint getBlueprint(String type) {
+    public static Blueprint<Entity> getBlueprint(String type) {
         return blueprints.get(type);
     }
 
@@ -38,13 +40,13 @@ public class Entities {
             return;
         }
         log.debug(LOG_TOPIC, "Loading Project entities blueprints");
-        for (FileHandle fileHandle : entitiesDirContent) {
-            String entityType = fileHandle.name();
-            if (!fileHandle.isDirectory()) {
+        for (FileHandle entityDefDir : entitiesDirContent) {
+            if (!entityDefDir.isDirectory()) {
                 // entities information should be provided at a child directory named after the entity type
                 continue;
             }
-            FileHandle entityBlueprint = fileHandle.child(String.format("%s.blueprint.ois", entityType));
+            String entityType = entityDefDir.name();
+            FileHandle entityBlueprint = entityDefDir.child(String.format("%s.blueprint.ois", entityType));
             if (!entityBlueprint.exists() || entityBlueprint.isDirectory()) {
                 log.warn(String.format("entity '%s' skipped, can't find valid blueprint at '%s.blueprint.ois'", entityType, entityType));
                 continue;

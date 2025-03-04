@@ -4,6 +4,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
 import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
+import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.DataObject;
 
@@ -28,7 +29,7 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
     }
 
     public Entity create(String type, boolean defaultIfNotFound) {
-        EntityBlueprint blueprint = Entities.getBlueprint(type);
+        Blueprint<Entity> blueprint = Entities.getBlueprint(type);
         if (blueprint == null && !defaultIfNotFound) {
             throw new UnsupportedOperationException(String.format("can't find '%s' entity blueprint", type));
         }
@@ -38,6 +39,13 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         }
         entities.get(type).put(entity.id, entity);
         return entity;
+    }
+
+    public Entity create(DataNode data) {
+        if (!data.contains("type")) {
+            throw new RuntimeException("can't create Entity: 'type' property not provided");
+        }
+        return create(data.get("type").getString()).loadData(data);
     }
 
     public Entity create(String type) {
@@ -107,7 +115,7 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
     public EntityManager loadData(DataNode data) {
         clear();
         for (DataNode entityData : data.get("entities")) {
-            create(entityData.get("type").getString()).loadData(entityData);
+            create(entityData);
         }
         return this;
     }
