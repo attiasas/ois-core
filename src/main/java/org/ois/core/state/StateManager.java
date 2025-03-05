@@ -1,5 +1,6 @@
 package org.ois.core.state;
 
+import org.ois.core.project.States;
 import org.ois.core.utils.log.Logger;
 
 import java.util.*;
@@ -14,7 +15,6 @@ import java.util.*;
  */
 public class StateManager {
     private static final Logger<StateManager> log = Logger.get(StateManager.class);
-    private static final String LOG_TOPIC = "states";
 
     /** All known states. **/
     private final Map<String, IState> states = new HashMap<>();
@@ -40,7 +40,7 @@ public class StateManager {
         if (states.containsKey(key)) {
             throw new IllegalArgumentException("State with key '" + key + "' already exists.");
         }
-        log.info(LOG_TOPIC,"Adding state '" + key + "' <" + state.getClass() + "> into the manager.");
+        log.info(States.LOG_TOPIC,"Adding state '" + key + "' <" + state.getClass() + "> into the manager.");
         this.states.put(key, state);
     }
 
@@ -51,7 +51,7 @@ public class StateManager {
      * @throws IllegalArgumentException if the state key does not exist
      */
     public void start(String initialState) {
-        log.info(LOG_TOPIC, "Starting StateManager with state '" + initialState + "'");
+        log.info(States.LOG_TOPIC, "Starting StateManager with state '" + initialState + "'");
         changeState(initialState);
     }
 
@@ -109,7 +109,7 @@ public class StateManager {
         if (params.length > 0) {
             logMsg += ", with params: " + Arrays.toString(params);
         }
-        log.info(LOG_TOPIC, logMsg);
+        log.info(States.LOG_TOPIC, logMsg);
         try {
             inState.enter(params);
             this.stateStack.push(key);
@@ -128,7 +128,7 @@ public class StateManager {
             return null;
         }
         String outStateKey = this.stateStack.pop();
-        log.info(LOG_TOPIC, "Exit state '" + outStateKey + "'");
+        log.info(States.LOG_TOPIC, "Exit state '" + outStateKey + "'");
         IState out = states.get(outStateKey);
         out.exit();
         return out;
@@ -152,7 +152,7 @@ public class StateManager {
             return false;
         }
         try {
-            log.debug(LOG_TOPIC, "Update current state '" + this.stateStack.peek() + "', delta-time: " + delta);
+            log.debug(States.LOG_TOPIC, "Update current state '" + this.stateStack.peek() + "', delta-time: " + delta);
             if (!current.update(delta)) {
                 exitCurrentState();
             }
@@ -173,7 +173,7 @@ public class StateManager {
             return;
         }
         try {
-            log.debug(LOG_TOPIC, "Render current state '" + this.stateStack.peek() + "'.");
+            log.debug(States.LOG_TOPIC, "Render current state '" + this.stateStack.peek() + "'.");
             current.render();
         } catch (Exception e) {
             handleCurrentStateException("Render", e);
@@ -191,7 +191,7 @@ public class StateManager {
             return;
         }
         try {
-            log.info(LOG_TOPIC, "Pause current state '" + this.stateStack.peek() + "'.");
+            log.info(States.LOG_TOPIC, "Pause current state '" + this.stateStack.peek() + "'.");
             current.pause();
         } catch (Exception e) {
             handleCurrentStateException("Pause", e);
@@ -209,7 +209,7 @@ public class StateManager {
             return;
         }
         try {
-            log.info(LOG_TOPIC, "Resume current state '" + this.stateStack.peek() + "'.");
+            log.info(States.LOG_TOPIC, "Resume current state '" + this.stateStack.peek() + "'.");
             current.resume();
         } catch (Exception e) {
             handleCurrentStateException("Resume", e);
@@ -229,7 +229,7 @@ public class StateManager {
             return;
         }
         try {
-            log.debug(LOG_TOPIC, "Resize current state '" + this.stateStack.peek() + "' to [" + width + ", " + height + "]");
+            log.debug(States.LOG_TOPIC, "Resize current state '" + this.stateStack.peek() + "' to [" + width + ", " + height + "]");
             // TODO: When allowing multiple states at stack, make sure other states are okay
             current.resize(width, height);
         } catch (Exception e) {
@@ -249,7 +249,7 @@ public class StateManager {
         for (Map.Entry<String,IState> state : states.entrySet())
         {
             try {
-                log.info(LOG_TOPIC, "Dispose state '" + state.getKey() + "'.");
+                log.info(States.LOG_TOPIC, "Dispose state '" + state.getKey() + "'.");
                 state.getValue().dispose();
             } catch (Exception e) {
                 log.error("[Dispose] Caught exception from the state <" + state.getClass() + ">", e);
