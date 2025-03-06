@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "corretto"
-          java-version: "23"
+          java-version: "19"
       - name: Give permission to gradlew
         run: chmod +x gradlew
         if: runner.os != 'Windows'
