@@ -10,24 +10,53 @@ import org.ois.core.utils.io.data.DataObject;
 
 import java.util.*;
 
+/**
+ * Manages the creation, storage, and lifecycle of {@link Entity} instances.
+ * It supports entity retrieval, removal, and periodic updates.
+ */
 public class EntityManager implements DataObject<EntityManager>, Disposable {
 
+    /** Stores entities categorized by their type and ID. */
     Map<String, Map<ID, Entity>> entities = new Hashtable<>();
 
+    /** Flag indicating whether to cache the manifest data. */
     boolean saveCache;
+
+    /** File handle to the manifest file. */
     FileHandle manifest;
+    /** Cached data of the loaded manifest. */
     DataNode cachedManifest;
 
+    /**
+     * Sets the manifest file.
+     *
+     * @param manifest The manifest file handle.
+     * @return The updated {@code EntityManager} instance.
+     */
     public EntityManager setManifest(FileHandle manifest) {
         this.manifest = manifest;
         return this;
     }
 
+    /**
+     * Enables or disables caching of the manifest data.
+     *
+     * @param save {@code true} to enable caching, {@code false} otherwise.
+     * @return The updated {@code EntityManager} instance.
+     */
     public EntityManager setSaveCache(boolean save) {
         this.saveCache = save;
         return this;
     }
 
+    /**
+     * Creates a new entity of the specified type.
+     *
+     * @param type The type of the entity.
+     * @param defaultIfNotFound If {@code true}, a default entity is created if no blueprint is found.
+     * @return The created {@code Entity} instance.
+     * @throws UnsupportedOperationException If the blueprint is missing and {@code defaultIfNotFound} is {@code false}.
+     */
     public Entity create(String type, boolean defaultIfNotFound) {
         Blueprint<Entity> blueprint = Entities.getBlueprint(type);
         if (blueprint == null && !defaultIfNotFound) {
@@ -41,21 +70,46 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         return entity;
     }
 
+    /**
+     * Creates an entity from a {@code DataNode} containing its properties.
+     *
+     * @param data The data node containing entity attributes.
+     * @return The created {@code Entity} instance.
+     * @throws RuntimeException If the type property is missing.
+     */
     public Entity create(DataNode data) {
-        if (!data.contains("type")) {
-            throw new RuntimeException("can't create Entity: 'type' property not provided");
+        if (!data.contains(Entities.TYPE_PROPERTY)) {
+            throw new RuntimeException(String.format("can't create Entity: '%s' property not provided", Entities.TYPE_PROPERTY));
         }
-        return create(data.get("type").getString()).loadData(data);
+        return create(data.get(Entities.TYPE_PROPERTY).getString()).loadData(data);
     }
 
+    /**
+     * Creates an entity of the specified type.
+     *
+     * @param type The entity type.
+     * @return The created {@code Entity} instance.
+     */
     public Entity create(String type) {
         return create(type, false);
     }
 
+    /**
+     * Removes an entity from the manager.
+     *
+     * @param entity The entity to remove.
+     * @return {@code true} if removed successfully, otherwise {@code false}.
+     */
     public boolean remove(Entity entity) {
         return remove(entity.id);
     }
 
+    /**
+     * Removes an entity by its ID.
+     *
+     * @param id The ID of the entity to remove.
+     * @return {@code true} if removed successfully, otherwise {@code false}.
+     */
     public boolean remove(ID id) {
         if (!entities.containsKey(id.getTopic())) {
             return false;
@@ -66,6 +120,12 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         return entities.get(id.getTopic()).remove(id) != null;
     }
 
+    /**
+     * Retrieves an entity by its ID.
+     *
+     * @param id The entity ID.
+     * @return The corresponding {@code Entity}, or {@code null} if not found.
+     */
     public Entity get(ID id) {
         if (!entities.containsKey(id.getTopic())) {
             return null;
@@ -73,6 +133,12 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         return entities.get(id.getTopic()).get(id);
     }
 
+    /**
+     * Retrieves all entities of the specified type.
+     *
+     * @param type The entity type.
+     * @return A collection of entities of the given type.
+     */
     public Collection<Entity> get(String type) {
         if (!entities.containsKey(type)) {
             return List.of();
@@ -80,6 +146,9 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         return entities.get(type).values();
     }
 
+    /**
+     * Updates all enabled entities.
+     */
     public void update() {
         for (Map<ID, Entity> typeInstances : entities.values()) {
             for (Entity entity : typeInstances.values()) {
@@ -91,8 +160,16 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         }
     }
 
+    /**
+     * Clears all entities from the manager.
+     */
     public void clear() { this.entities.clear(); }
 
+    /**
+     * Loads the manifest data from a file or cache.
+     *
+     * @param forceLoad If {@code true}, forces reloading from the file system.
+     */
     public void loadManifest(boolean forceLoad) {
         if (manifest == null) {
             // Nothing to do
@@ -114,7 +191,7 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
     @Override
     public EntityManager loadData(DataNode data) {
         clear();
-        for (DataNode entityData : data.get("entities")) {
+        for (DataNode entityData : data.get(Entities.ENTITIES_PROPERTY)) {
             create(entityData);
         }
         return this;
@@ -124,7 +201,7 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
     public DataNode convertToDataNode() {
         DataNode root = DataNode.Object();
 
-        DataNode entitiesProperty = root.getProperty("entities");
+        DataNode entitiesProperty = root.getProperty(Entities.ENTITIES_PROPERTY);
 
         for (Map<ID, Entity> typeInstances : entities.values()) {
             for (Entity entity : typeInstances.values()) {

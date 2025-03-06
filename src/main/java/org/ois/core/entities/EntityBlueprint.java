@@ -1,21 +1,37 @@
 package org.ois.core.entities;
 
+import org.ois.core.project.Entities;
 import org.ois.core.utils.ReflectionUtils;
 import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
 
-
+/**
+ * Represents a blueprint for creating {@link Entity} instances.
+ * It allows defining a base type and an optional custom class for instantiation.
+ */
 public class EntityBlueprint implements Blueprint<Entity> {
 
+    /** The base type of the entity. */
     protected final String type;
-
+    /** The fully qualified name of a custom class to instantiate. */
     protected String customClass;
-    private static final String CUSTOM_CLASS_ATTRIB = "class";
 
+    /**
+     * Constructs an {@code EntityBlueprint} with the specified type.
+     *
+     * @param type The type of the entity.
+     */
     public EntityBlueprint(String type) {
         this.type = type;
     }
 
+    /**
+     * Creates a new {@code Entity} instance based on this blueprint.
+     * If a custom class is specified, it attempts to instantiate it using reflection.
+     *
+     * @return A new {@code Entity} instance.
+     * @throws RuntimeException If the custom class instantiation fails.
+     */
     @Override
     public Entity create() {
         if (isCustomClassBlueprint()) {
@@ -28,15 +44,23 @@ public class EntityBlueprint implements Blueprint<Entity> {
         return new Entity(type);
     }
 
+    /**
+     * Checks if this blueprint defines a custom class for instantiation.
+     *
+     * @return {@code true} if a custom class is set, otherwise {@code false}.
+     */
     private boolean isCustomClassBlueprint() {
         return customClass != null && !customClass.isBlank();
     }
 
+    /**
+     * Loads blueprint data from a {@code DataNode}.
+     */
     @Override
     public EntityBlueprint loadData(DataNode data) {
 
-        if (data.contains(CUSTOM_CLASS_ATTRIB)) {
-            customClass = data.get(CUSTOM_CLASS_ATTRIB).getString();
+        if (data.contains(Entities.ENTITY_CUSTOM_CLASS_PROPERTY)) {
+            customClass = data.get(Entities.ENTITY_CUSTOM_CLASS_PROPERTY).getString();
         }
 
         return this;
@@ -47,7 +71,7 @@ public class EntityBlueprint implements Blueprint<Entity> {
         DataNode root = DataNode.Object();
 
         if (isCustomClassBlueprint()) {
-            root.set(CUSTOM_CLASS_ATTRIB, customClass);
+            root.set(Entities.ENTITY_CUSTOM_CLASS_PROPERTY, customClass);
         }
 
         return root;
