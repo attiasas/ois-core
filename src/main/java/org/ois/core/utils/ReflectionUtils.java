@@ -2,6 +2,7 @@ package org.ois.core.utils;
 
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
+import org.ois.core.utils.io.data.DataNode;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -29,5 +30,12 @@ public class ReflectionUtils {
         Class<?> instanceClass = ClassReflection.forName(className);
         Constructor<?> instanceConstructor = instanceClass.getDeclaredConstructor();
         return (T) instanceConstructor.newInstance();
+    }
+
+    public static <T> T newInstance(DataNode node) throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        if (node == null || !node.contains("class")) {
+            throw new RuntimeException("can't create reflected object without 'class' attribute");
+        }
+        return newInstance(node.get("class").getString());
     }
 }

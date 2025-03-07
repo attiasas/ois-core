@@ -1,4 +1,4 @@
-package org.ois.core.devmode;
+package org.ois.core.debug;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -26,7 +26,7 @@ public class DebugManager implements Disposable {
     }
 
     public boolean isDevMode() {
-        return !this.devModeDir.isBlank();
+        return this.devModeDir != null && !this.devModeDir.isBlank();
     }
 
     public void render() {
