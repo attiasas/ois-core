@@ -895,6 +895,13 @@ public class DataNode implements Iterable<DataNode> {
         return copy;
     }
 
+    public DataNode removeAttributes(String ...attributes) {
+        for (String attribute : attributes) {
+            this.attributes.remove(attribute);
+        }
+        return this;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(nodeType, value, content, attributes);

@@ -2,9 +2,9 @@ package org.ois.core.state.managed;
 
 import org.ois.core.entities.EntityManager;
 import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.DataObject;
+import org.ois.core.utils.io.data.IDataObject;
 
-public abstract class ManagedState implements IManagedState, DataObject<ManagedState> {
+public abstract class ManagedState implements IManagedState, IDataObject<ManagedState> {
 
     protected EntityManager entityManager;
 
