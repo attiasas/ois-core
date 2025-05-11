@@ -31,6 +31,7 @@ public abstract class Property<T> implements IDataObject<T> {
     public Property<T> setDefaultValue(T defaultValue) {
         this.defaultValue = defaultValue;
         this.defaultSet = true;
+        this.managedData = defaultValue;
         return this;
     }
 
@@ -39,7 +40,7 @@ public abstract class Property<T> implements IDataObject<T> {
     }
 
     @Override
-    public T loadData(DataNode dataNode) {
+    public <D extends T> D loadData(DataNode dataNode) {
         if (!dataNode.contains(key)) {
             if (!optional) {
                 throw new RuntimeException(String.format("Can't load '%s' from data node: expected '%s' attribute", managedData.getClass().getName(), this.key));
@@ -47,9 +48,9 @@ public abstract class Property<T> implements IDataObject<T> {
             if (defaultSet) {
                 managedData = defaultValue;
             }
-            return managedData;
+            return (D) managedData;
         }
-        return loadProperty(dataNode.get(key));
+        return (D) loadProperty(dataNode.get(key));
     }
 
     public abstract T loadProperty(DataNode attributeValue);
