@@ -6,14 +6,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import org.ois.core.OIS;
 import org.ois.core.debug.DebugManager;
-import org.ois.core.debug.DevModeState;
 import org.ois.core.project.Entities;
 import org.ois.core.project.SimulationManifest;
 import org.ois.core.project.States;
 import org.ois.core.state.ErrorState;
 import org.ois.core.state.IState;
 import org.ois.core.state.StateManager;
-import org.ois.core.utils.ReflectionUtils;
 import org.ois.core.utils.io.data.formats.JsonFormat;
 import org.ois.core.utils.log.Logger;
 
@@ -91,17 +89,17 @@ public class SimulationEngine extends ApplicationAdapter {
      * @throws IllegalAccessException if access to the method or constructor is denied.
      */
     public void loadProject() throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-       // Get/Load project manifest
-       SimulationManifest manifest = getSimulationManifest();
-       // Load project entity blueprints
-       Entities.loadBlueprints();
-
+        // Get/Load project manifest
+        SimulationManifest manifest = getSimulationManifest();
+        // Load project data
+        log.debug("Loading entities blueprints if exists");
+        Entities.loadBlueprints();
         log.info("Loading Project states to manager");
-        for (Map.Entry<String, String> entry : manifest.getStates().entrySet()) {
-            this.stateManager.registerState(entry.getKey(), loadState(entry));
-            log.debug("State '" + entry.getKey() + "' loaded");
+        Map<String, IState> states = States.loadStates(manifest, debugManager != null && debugManager.isDevMode());
+        for (Map.Entry<String, IState> state : states.entrySet()) {
+            this.stateManager.registerState(state.getKey(), state.getValue());
         }
-        log.info("Loading completed");
+        log.info("-- Loading completed --");
         this.stateManager.start(manifest.getInitialState());
     }
 
@@ -122,14 +120,6 @@ public class SimulationEngine extends ApplicationAdapter {
         return configuration.getSimulationManifest();
     }
 
-    private IState loadState(Map.Entry<String, String> stateInfo) throws ReflectionException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        IState state = States.loadState(stateInfo.getKey(), stateInfo.getValue());
-        if (debugManager != null && debugManager.isDevMode()) {
-            state = new DevModeState(state);
-        }
-        return state;
-    }
-
     /**
      * Stops the application gracefully.
      */
@@ -143,14 +133,17 @@ public class SimulationEngine extends ApplicationAdapter {
     @Override
     public void render() {
         try {
-            float dt = Gdx.graphics.getDeltaTime();
-            if (errorState.isActive() && errorState.update(dt)) {
+            OIS.deltaTime = Gdx.graphics.getDeltaTime();
+            // If error occur, update and render Error-State
+            if (errorState.isActive() && errorState.update(OIS.deltaTime)) {
                 errorState.render();
                 return;
             }
-            if (stateManager.update(dt)) {
+            // Update and render current state
+            if (stateManager.update(OIS.deltaTime)) {
                 stateManager.render();
                 if (debugManager != null) {
+                    // Render debug information on the screen
                     debugManager.render();
                 }
             } else {

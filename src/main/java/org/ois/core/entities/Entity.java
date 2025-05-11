@@ -1,11 +1,14 @@
 package org.ois.core.entities;
 
+import org.ois.core.components.ComponentManager;
+import org.ois.core.project.Components;
 import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
+import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.DataObject;
-import org.ois.core.utils.io.data.properties.BooleanProperty;
-import org.ois.core.utils.io.data.properties.StringProperty;
+import org.ois.core.utils.io.data.properties.*;
 import org.ois.core.utils.log.Logger;
+import org.ois.core.utils.math.Transform;
 
 import java.util.Objects;
 
@@ -22,7 +25,9 @@ public class Entity extends DataObject {
     /** The unique identifier for this entity. */
     public final ID id;
     /** Flag indicating whether the entity is enabled. */
-    private final BooleanProperty enabled = new BooleanProperty(Entities.ENABLE_PROPERTY);
+    private final Property<Boolean> enabled = new BooleanProperty(Entities.ENABLE_PROPERTY);
+    /** The Entity registered components */
+    protected final ComponentManager<Entity> components = new ComponentManager<>();
 
     /**
      * Constructs an Entity with the specified type.
@@ -30,10 +35,10 @@ public class Entity extends DataObject {
      *
      * @param type The type of the entity.
      */
-    protected Entity(String type) {
-        this.id = ID.generate(type);
+    public Entity(String type) {
+        this.id = ID.generate(Entities.LOG_TOPIC);
         registerProperty(this.type.set(type));
-        registerProperty(this.enabled.setOptional(true).setDefaultValue(true).set(true));
+        registerProperty(this.enabled.setOptional(true).setDefaultValue(true));
     }
 
     /**
@@ -43,7 +48,24 @@ public class Entity extends DataObject {
         if (!this.enabled.get()) {
             return;
         }
-        log.debug(Entities.LOG_TOPIC, String.format("Updating { %s, ID: '%s' }", this.type, this.id));
+        log.debug(this.id.toString(), String.format("Updating { %s, ID: '%s' }", this.type, this.id));
+        components.update();
+    }
+
+    /** TODO: remove */
+    public void render() {
+        if (!this.enabled.get()) {
+            return;
+        }
+        components.render();
+    }
+
+    /** TODO: remove */
+    public void resize(int width, int height) {
+        if (!this.enabled.get()) {
+            return;
+        }
+        components.resize(width, height);
     }
 
     @Override
@@ -78,4 +100,30 @@ public class Entity extends DataObject {
     public String getType() {
         return this.type.get();
     }
+
+    public ComponentManager<Entity> components() { return this.components; }
+
+    @Override
+    public <T extends DataObject> T loadData(DataNode dataNode) {
+        Entity entity = super.loadData(dataNode);
+
+        if (dataNode.contains(Components.COMPONENTS_PROPERTY)) {
+            // Load components data
+            components.loadData(dataNode.get(Components.COMPONENTS_PROPERTY));
+        }
+
+        return (T) entity;
+    }
+
+    @Override
+    public DataNode convertToDataNode() {
+        DataNode root = super.convertToDataNode();
+        if (!components.isEmpty())
+        {
+            //Set components data
+            root.set(Components.COMPONENTS_PROPERTY, components.convertToDataNode());
+        }
+        return root;
+    }
+
 }

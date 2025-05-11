@@ -1,12 +1,14 @@
 package org.ois.core.state.managed;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
+import org.ois.core.components.ComponentManager;
 import org.ois.core.entities.EntityManager;
-import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.IDataObject;
 
-public abstract class ManagedState implements IManagedState, IDataObject<ManagedState> {
+public class ManagedState implements IManagedState {
 
-    protected EntityManager entityManager;
+    protected EntityManager entityManager = new EntityManager();
+    protected ComponentManager<? extends IManagedState> components = new ComponentManager<>();
 
     @Override
     public void enter(Object... parameters) {
@@ -15,25 +17,35 @@ public abstract class ManagedState implements IManagedState, IDataObject<Managed
 
     @Override
     public void exit() {
+        components.clear();
         entityManager.clear();
     }
 
     @Override
     public void dispose() {
+        components.dispose();
         entityManager.dispose();
     }
 
     @Override
     public boolean update(float dt) {
+        components.update();
         entityManager.update();
         return true;
     }
 
     @Override
-    public void render() {}
+    public void render() {
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        components.render();
+        entityManager.render();
+    }
 
     @Override
-    public void resize(int width, int height) {}
+    public void resize(int width, int height) {
+        components.resize(width, height);
+        entityManager.resize(width, height);
+    }
 
     @Override
     public void pause() {}
@@ -42,37 +54,12 @@ public abstract class ManagedState implements IManagedState, IDataObject<Managed
     public void resume() {}
 
     @Override
-    public void setEntityManager(EntityManager manager) {
-        this.entityManager = manager;
-    }
-
-    @Override
     public EntityManager getEntityManager() {
         return entityManager;
     }
 
     @Override
-    public ManagedState loadData(DataNode data) {
-
-        if (data.contains("entityManager")) {
-            if (entityManager == null) {
-                entityManager = new EntityManager();
-            }
-            entityManager.loadData(data.getProperty("entityManager"));
-        }
-
-        return this;
+    public ComponentManager<? extends IManagedState> getComponents() {
+        return components;
     }
-
-    @Override
-    public DataNode convertToDataNode() {
-        DataNode root = DataNode.Object();
-
-        if (entityManager != null) {
-            root.set("entityManager", entityManager.convertToDataNode());
-        }
-
-        return root;
-    }
-
 }

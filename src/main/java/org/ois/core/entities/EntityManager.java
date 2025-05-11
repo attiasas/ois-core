@@ -2,11 +2,13 @@ package org.ois.core.entities;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
+import org.ois.core.components.IComponent;
 import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
-import org.ois.core.utils.io.data.Blueprint;
+import org.ois.core.utils.io.data.DataBlueprint;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.IDataObject;
+import org.ois.core.utils.log.Logger;
 
 import java.util.*;
 
@@ -16,14 +18,15 @@ import java.util.*;
  */
 public class EntityManager implements IDataObject<EntityManager>, Disposable {
 
+    private static final Logger<EntityManager> log = Logger.get(EntityManager.class);
+
     /** Stores entities categorized by their type and ID. */
     Map<String, Map<ID, Entity>> entities = new Hashtable<>();
 
-    /** Flag indicating whether to cache the manifest data. */
-    boolean saveCache;
-
     /** File handle to the manifest file. */
     FileHandle manifest;
+    /** Flag indicating whether to cache the manifest data. */
+    boolean saveCache;
     /** Cached data of the loaded manifest. */
     DataNode cachedManifest;
 
@@ -57,17 +60,18 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
      * @return The created {@code Entity} instance.
      * @throws UnsupportedOperationException If the blueprint is missing and {@code defaultIfNotFound} is {@code false}.
      */
-    public Entity create(String type, boolean defaultIfNotFound) {
-        Blueprint<Entity> blueprint = Entities.getBlueprint(type);
+    public <T extends Entity> T create(String type, boolean defaultIfNotFound) {
+        DataBlueprint<Entity> blueprint = Entities.getBlueprint(type);
         if (blueprint == null && !defaultIfNotFound) {
-            throw new UnsupportedOperationException(String.format("can't find '%s' entity blueprint", type));
+            throw new RuntimeException(String.format("can't find '%s' entity blueprint", type));
         }
+        log.debug(String.format("Creating entity '%s' (with blueprint = %s)", type, blueprint == null ? "false" : blueprint.getClass().getName()));
         Entity entity = blueprint != null ? blueprint.create() : new Entity(type);
         if (!entities.containsKey(type)) {
             entities.put(type, new Hashtable<>());
         }
         entities.get(type).put(entity.id, entity);
-        return entity;
+        return (T) entity;
     }
 
     /**
@@ -77,11 +81,11 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
      * @return The created {@code Entity} instance.
      * @throws RuntimeException If the type property is missing.
      */
-    public Entity create(DataNode data) {
+    public <T extends Entity> T create(DataNode data) {
         if (!data.contains(Entities.TYPE_PROPERTY)) {
             throw new RuntimeException(String.format("can't create Entity: '%s' property not provided", Entities.TYPE_PROPERTY));
         }
-        return (Entity) create(data.get(Entities.TYPE_PROPERTY).getString()).loadData(data);
+        return create(data.get(Entities.TYPE_PROPERTY).getString()).loadData(data);
     }
 
     /**
@@ -90,7 +94,7 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
      * @param type The entity type.
      * @return The created {@code Entity} instance.
      */
-    public Entity create(String type) {
+    public <T extends Entity> T create(String type) {
         return create(type, false);
     }
 
@@ -146,16 +150,59 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
         return entities.get(type).values();
     }
 
+    public <T extends IComponent> Collection<Entity> withComponent(Class<T> componentClass) {
+        Collection<Entity> withComponents = new ArrayList<>();
+        for (Map<ID, Entity> typeInstances : entities.values()) {
+            for (Entity entity : typeInstances.values()) {
+                if (entity.components.has(componentClass)) {
+                    withComponents.add(entity);
+                }
+            }
+        }
+        return withComponents;
+    }
+
     /**
      * Updates all enabled entities.
      */
     public void update() {
+//        log.debug("Updating entities");
+        for (Map<ID, Entity> typeInstances : entities.values()) {
+            for (Entity entity : typeInstances.values()) {
+                if (!entity.isEnabled()) {
+//                    log.debug(String.format("entity '%s' disabled", entity.id));
+                    continue;
+                }
+//                log.debug(String.format("Update entity '%s'", entity.id));
+                entity.update();
+            }
+        }
+    }
+
+    /**
+     * TODO: remove
+     */
+    public void render() {
         for (Map<ID, Entity> typeInstances : entities.values()) {
             for (Entity entity : typeInstances.values()) {
                 if (!entity.isEnabled()) {
                     continue;
                 }
-                entity.update();
+                entity.render();
+            }
+        }
+    }
+
+    /**
+     * TODO: remove
+     */
+    public void resize(int width, int height) {
+        for (Map<ID, Entity> typeInstances : entities.values()) {
+            for (Entity entity : typeInstances.values()) {
+                if (!entity.isEnabled()) {
+                    continue;
+                }
+                entity.resize(width, height);
             }
         }
     }
@@ -189,12 +236,12 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
     }
 
     @Override
-    public EntityManager loadData(DataNode data) {
-        clear();
+    public <M extends EntityManager> M loadData(DataNode data) {
+        dispose();
         for (DataNode entityData : data.get(Entities.ENTITIES_PROPERTY)) {
             create(entityData);
         }
-        return this;
+        return (M) this;
     }
 
     @Override

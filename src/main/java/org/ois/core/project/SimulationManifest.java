@@ -39,7 +39,7 @@ public class SimulationManifest implements IDataObject<SimulationManifest> {
      * @return the updated {@link SimulationManifest} object.
      */
     @Override
-    public SimulationManifest loadData(DataNode data) {
+    public <M extends SimulationManifest> M loadData(DataNode data) {
         // Required
         initialState = data.get("initialState").getString();
         states = data.get("states").toStringMap();
@@ -48,7 +48,7 @@ public class SimulationManifest implements IDataObject<SimulationManifest> {
         platforms = data.getProperty("runner","platforms").toStringCollection(new ArrayList<>()).stream().map(RunnerConfiguration::toPlatform).collect(Collectors.toSet());
         screenWidth = data.getProperty("runner","screenWidth").getInt();
         screenHeight = data.getProperty("runner", "screenHeight").getInt();
-        return this;
+        return (M) this;
     }
 
     /**
