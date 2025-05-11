@@ -11,4 +11,6 @@ public class OIS {
     public static SimulationEngine engine;
     /** The State managers of the simulation **/
     public static StateManager stateManager;
+    /** The current delta time that passed from the last frame **/
+    public static float deltaTime;
 }
