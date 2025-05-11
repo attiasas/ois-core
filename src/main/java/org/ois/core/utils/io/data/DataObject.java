@@ -9,21 +9,17 @@ public class DataObject implements IDataObject<DataObject> {
 
     List<Property> managedProperties = new ArrayList<>();
 
-    public <T extends Property> T registerProperty(T property) {
+    public <P extends Property> P registerProperty(P property) {
         managedProperties.add(property);
         return property;
     }
 
-    public <T extends DataObject> T loadObject(DataNode dataNode) {
-        return (T) loadData(dataNode);
-    }
-
     @Override
-    public DataObject loadData(DataNode dataNode) {
+    public <T extends DataObject> T loadData(DataNode dataNode) {
         for (Property property : managedProperties) {
             property.loadData(dataNode);
         }
-        return this;
+        return (T) this;
     }
 
     @Override

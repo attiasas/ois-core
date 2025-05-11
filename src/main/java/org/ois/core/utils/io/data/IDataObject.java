@@ -13,7 +13,7 @@ public interface IDataObject<T> {
      * @param data the {@link DataNode} containing the data to be loaded
      * @return the populated data object
      */
-    T loadData(DataNode data);
+    <D extends T> D loadData(DataNode data);
 
     /**
      * Converts the data object to a {@link DataNode} representation.
