@@ -8,7 +8,6 @@ import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.DataObject;
 import org.ois.core.utils.io.data.properties.*;
 import org.ois.core.utils.log.Logger;
-import org.ois.core.utils.math.Transform;
 
 import java.util.Objects;
 
@@ -48,7 +47,7 @@ public class Entity extends DataObject {
         if (!this.enabled.get()) {
             return;
         }
-        log.debug(this.id.toString(), String.format("Updating { %s, ID: '%s' }", this.type, this.id));
+        log.debug(this.id.toString(), "Updating { %s, ID: '%s' }", this.type, this.id);
         components.update();
     }
 

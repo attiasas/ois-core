@@ -90,7 +90,7 @@ public class Logger<T> implements ILogger {
             // Allow logging for all messages if the topic is empty or no topics are set
             return true;
         }
-        return allowedTopics.contains(topic);
+        return allowedTopics.contains(topic) || allowedTopics.contains(logClass.getName());
     }
 
     /**
@@ -134,33 +134,29 @@ public class Logger<T> implements ILogger {
     }
 
     @Override
-    public void debug(String topic, String message) {
-        log(Level.Debug, topic, message, null);
+    public void debug(String topic, String message, Object ...args) { log(Level.Debug, topic, String.format(message, args), null); }
+
+    @Override
+    public void info(String topic, String message, Object ...args) { log(Level.Info, topic, String.format(message, args), null); }
+
+    @Override
+    public void debug(String message, Object ...args) {
+        log(Level.Debug, "", String.format(message, args), null);
     }
 
     @Override
-    public void info(String topic, String message) {
-        log(Level.Info, topic, message, null);
+    public void info(String message, Object ...args) {
+        log(Level.Info, "", String.format(message, args), null);
     }
 
     @Override
-    public void debug(String message) {
-        log(Level.Debug, "", message, null);
+    public void warn(String message, Object ...args) {
+        log(Level.Warn, "", String.format(message, args), null);
     }
 
     @Override
-    public void info(String message) {
-        log(Level.Info, "", message, null);
-    }
-
-    @Override
-    public void warn(String message) {
-        log(Level.Warn, "", message, null);
-    }
-
-    @Override
-    public void error(String message) {
-        log(Level.Error, "", message, null);
+    public void error(String message, Object ...args) {
+        log(Level.Error, "", String.format(message, args), null);
     }
 
     @Override

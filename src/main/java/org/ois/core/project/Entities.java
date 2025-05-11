@@ -91,7 +91,7 @@ public class Entities {
                 log.warn(String.format("entity '%s' skipped, can't find valid blueprint at '%s.blueprint.ois'", entityType, entityType));
                 continue;
             }
-            log.debug(LOG_TOPIC, String.format("loading '%s'", entityBlueprintFile));
+            log.debug(LOG_TOPIC, "loading '%s'", entityBlueprintFile);
             byte[] data = entityBlueprintFile.readBytes();
             if (data == null) {
                 throw new RuntimeException(String.format("Can't load '%s' blueprint", entityType));
@@ -99,10 +99,10 @@ public class Entities {
             String rawData = new String(data);
             DataNode dataNode = JsonFormat.compact().deserialize(rawData);
             DataBlueprint<Entity> entityBlueprint = dataNode.contains(BLUEPRINT_CUSTOM_CLASS_PROPERTY) ? ReflectionUtils.newInstance(dataNode.get(BLUEPRINT_CUSTOM_CLASS_PROPERTY).getString()) : new EntityBlueprint(entityType);
-            log.debug(LOG_TOPIC, String.format("'%s' Blueprint (%s): %s", entityType, entityBlueprint.getClass().getName(), rawData));
+            log.debug(LOG_TOPIC, "'%s' Blueprint (%s): %s", entityType, entityBlueprint.getClass().getName(), rawData);
             blueprints.put(entityType, entityBlueprint.loadData(dataNode));
         }
-        log.debug(LOG_TOPIC, String.format("Loaded '%d' entities blueprints", blueprints.size()));
+        log.debug(LOG_TOPIC, "Loaded '%d' entities blueprints", blueprints.size());
     }
 
     /**
@@ -132,7 +132,7 @@ public class Entities {
             throw new RuntimeException(String.format("Can't load manifest '%s'", entityManagerManifest));
         }
         String rawData = new String(data);
-        log.debug(LOG_TOPIC, String.format("Loaded entities manifest: %s", rawData));
+        log.debug(LOG_TOPIC, "Loaded entities manifest: %s", rawData);
         return JsonFormat.compact().deserialize(rawData);
     }
 }

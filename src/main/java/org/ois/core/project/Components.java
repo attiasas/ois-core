@@ -1,11 +1,7 @@
 package org.ois.core.project;
 
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import org.ois.core.components.IComponent;
 import org.ois.core.project.blueprints.ComponentBlueprint;
-import org.ois.core.components.ComponentManager;
-import org.ois.core.state.managed.IManagedState;
 import org.ois.core.utils.ReflectionUtils;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.formats.JsonFormat;
@@ -62,7 +58,7 @@ public class Components {
             throw new RuntimeException(String.format("component blueprint must contain '%s' property or extended and registered in context (Entity/State blueprints) code", BLUEPRINT_CUSTOM_CLASS_PROPERTY));
         }
         ComponentBlueprint blueprint = ReflectionUtils.newInstance(componentBlueprint.get(BLUEPRINT_CUSTOM_CLASS_PROPERTY).getString());
-        log.debug(LOG_TOPIC, String.format("Component Blueprint (%s): %s", blueprint.getClass().getName(), JsonFormat.humanReadable().serialize(componentBlueprint)));
+        log.debug(LOG_TOPIC, "Component Blueprint (%s): %s", blueprint.getClass().getName(), JsonFormat.humanReadable().serialize(componentBlueprint));
         return blueprint;
     }
 }

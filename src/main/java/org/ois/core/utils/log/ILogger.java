@@ -52,38 +52,38 @@ public interface ILogger {
      * @param topic   the topic associated with the log message
      * @param message the debug message to be logged
      */
-    void debug(String topic, String message);
+    void debug(String topic, String message, Object ...args);
     /**
      * Logs a debug message without a specific topic.
      *
      * @param message the debug message to be logged
      */
-    void debug(String message);
+    void debug(String message, Object ...args);
     /**
      * Logs an informational message with a specified topic.
      *
      * @param topic   the topic associated with the log message
      * @param message the informational message to be logged
      */
-    void info(String topic, String message);
+    void info(String topic, String message, Object ...args);
     /**
      * Logs an informational message without a specific topic.
      *
      * @param message the informational message to be logged
      */
-    void info(String message);
+    void info(String message, Object ...args);
     /**
      * Logs a warning message.
      *
      * @param message the warning message to be logged
      */
-    void warn(String message);
+    void warn(String message, Object ...args);
     /**
      * Logs an error message.
      *
      * @param message the error message to be logged
      */
-    void error(String message);
+    void error(String message, Object ...args);
     /**
      * Logs an error message along with the associated exception.
      *

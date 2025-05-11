@@ -95,7 +95,7 @@ public class States {
         // Create state blueprint from data
         DataNode dataNode = JsonFormat.compact().deserialize(rawData);
         DataBlueprint<IManagedState> blueprint = dataNode.contains(BLUEPRINT_CUSTOM_CLASS_PROPERTY) ? ReflectionUtils.newInstance(dataNode.get(BLUEPRINT_CUSTOM_CLASS_PROPERTY).getString()) : new StateBlueprint();
-        log.debug(LOG_TOPIC, String.format("Loaded state blueprint: %s", rawData));
+        log.debug(LOG_TOPIC, "Loaded state blueprint: %s", rawData);
         blueprints.put(stateKey, blueprint.loadData(dataNode));
         return blueprint;
     }

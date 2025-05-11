@@ -71,7 +71,7 @@ public class SimulationEngine extends ApplicationAdapter {
         try {
             if (configuration.getDebugMode()) {
                 debugManager = new DebugManager(configuration.getDevModeDir());
-                log.info(String.format("Engine running project in debug-mode (dev=%b)", debugManager.isDevMode()));
+                log.info("Engine running project in debug-mode (dev=%b)", debugManager.isDevMode());
             }
             loadProject();
         } catch (Exception e) {

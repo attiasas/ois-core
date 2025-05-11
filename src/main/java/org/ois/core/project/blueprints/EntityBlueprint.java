@@ -60,7 +60,7 @@ public class EntityBlueprint extends DataBlueprint<Entity> {
         for (Map.Entry<String, ComponentBlueprint<Entity>> componentBlueprint: entityRegisteredComponents.entrySet()) {
             createEntityComponent(entity, componentBlueprint.getKey(), componentBlueprint.getValue());
         }
-        log.debug(String.format("Created entity%s with %d components", custom ? String.format(" (class = %s)", customClass) : "", entity.components().size()));
+        log.debug("Created entity (class = %s) with %d components", entity.getClass().getName(), entity.components().size());
         return (C) entity;
     }
 
