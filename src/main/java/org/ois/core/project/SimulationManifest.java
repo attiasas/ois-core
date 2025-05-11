@@ -2,7 +2,7 @@ package org.ois.core.project;
 
 import org.ois.core.runner.RunnerConfiguration;
 import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.DataObject;
+import org.ois.core.utils.io.data.IDataObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 /**
  * Represents the Simulation Manifest, used by the project to configure how the project simulation is set up.
  */
-public class SimulationManifest implements DataObject<SimulationManifest> {
+public class SimulationManifest implements IDataObject<SimulationManifest> {
     /** The default name of the project configuration file that will be searched at the root project **/
     public static final String DEFAULT_FILE_NAME = "simulation.ois";
     /** The title of the project **/

@@ -6,7 +6,7 @@ import org.ois.core.project.Entities;
 import org.ois.core.utils.ID;
 import org.ois.core.utils.io.data.Blueprint;
 import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.DataObject;
+import org.ois.core.utils.io.data.IDataObject;
 
 import java.util.*;
 
@@ -14,7 +14,7 @@ import java.util.*;
  * Manages the creation, storage, and lifecycle of {@link Entity} instances.
  * It supports entity retrieval, removal, and periodic updates.
  */
-public class EntityManager implements DataObject<EntityManager>, Disposable {
+public class EntityManager implements IDataObject<EntityManager>, Disposable {
 
     /** Stores entities categorized by their type and ID. */
     Map<String, Map<ID, Entity>> entities = new Hashtable<>();
@@ -81,7 +81,7 @@ public class EntityManager implements DataObject<EntityManager>, Disposable {
         if (!data.contains(Entities.TYPE_PROPERTY)) {
             throw new RuntimeException(String.format("can't create Entity: '%s' property not provided", Entities.TYPE_PROPERTY));
         }
-        return create(data.get(Entities.TYPE_PROPERTY).getString()).loadData(data);
+        return (Entity) create(data.get(Entities.TYPE_PROPERTY).getString()).loadData(data);
     }
 
     /**

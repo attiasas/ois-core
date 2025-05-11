@@ -1,24 +1,33 @@
 package org.ois.core.utils.io.data;
 
-/**
- * Interface representing a data object that can load data from a {@link DataNode}
- * and convert itself to a {@link DataNode}.
- *
- * @param <T> the type of the data object
- */
-public interface DataObject<T> {
-    /**
-     * Loads data from the specified {@link DataNode} and populates the data object.
-     *
-     * @param data the {@link DataNode} containing the data to be loaded
-     * @return the populated data object
-     */
-    T loadData(DataNode data);
+import org.ois.core.utils.io.data.properties.Property;
 
-    /**
-     * Converts the data object to a {@link DataNode} representation.
-     *
-     * @return the {@link DataNode} representing the data object
-     */
-    DataNode convertToDataNode();
+import java.util.ArrayList;
+import java.util.List;
+
+public class DataObject implements IDataObject<DataObject> {
+
+    List<Property> managedProperties = new ArrayList<>();
+
+    public <P extends Property> P registerProperty(P property) {
+        managedProperties.add(property);
+        return property;
+    }
+
+    @Override
+    public <T extends DataObject> T loadData(DataNode dataNode) {
+        for (Property property : managedProperties) {
+            property.loadData(dataNode);
+        }
+        return (T) this;
+    }
+
+    @Override
+    public DataNode convertToDataNode() {
+        DataNode root = new DataNode();
+        for (Property property : managedProperties) {
+            property.appendPropertyToDataNode(root);
+        }
+        return root;
+    }
 }

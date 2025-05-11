@@ -1,13 +1,13 @@
 package org.ois.core.utils.io.data.formats;
 
 import org.ois.core.utils.io.data.DataNode;
-import org.ois.core.utils.io.data.DataObject;
+import org.ois.core.utils.io.data.IDataObject;
 
 import java.io.*;
 
 /**
  * Interface for defining data formats for serialization and deserialization
- * of {@link DataNode} and {@link DataObject} instances.
+ * of {@link DataNode} and {@link IDataObject} instances.
  */
 public interface DataFormat {
 
@@ -28,13 +28,13 @@ public interface DataFormat {
     String serialize(DataNode data);
 
     /**
-     * Serializes a {@link DataObject} into its string representation
+     * Serializes a {@link IDataObject} into its string representation
      * by first converting it to a {@link DataNode}.
      *
-     * @param data the {@link DataObject} to be serialized
+     * @param data the {@link IDataObject} to be serialized
      * @return the string representation of the serialized data
      */
-    default String serialize(DataObject<?> data) {
+    default String serialize(IDataObject<?> data) {
         return serialize(data.convertToDataNode());
     }
 
@@ -57,39 +57,39 @@ public interface DataFormat {
     }
 
     /**
-     * Loads data from an {@link InputStream} into the specified {@link DataObject}.
+     * Loads data from an {@link InputStream} into the specified {@link IDataObject}.
      *
-     * @param objToLoad the {@link DataObject} to populate with data
+     * @param objToLoad the {@link IDataObject} to populate with data
      * @param inputStream the input stream containing the data
      * @param <T> the type of the data object
-     * @return the populated {@link DataObject}
+     * @return the populated {@link IDataObject}
      * @throws IOException if an I/O error occurs while reading the stream
      */
-    default <T extends DataObject<T>> T load(T objToLoad, InputStream inputStream) throws IOException {
+    default <T extends IDataObject<T>> T load(T objToLoad, InputStream inputStream) throws IOException {
         return objToLoad.loadData(load(inputStream));
     }
 
     /**
-     * Loads data from a byte array into the specified {@link DataObject}.
+     * Loads data from a byte array into the specified {@link IDataObject}.
      *
-     * @param objToLoad the {@link DataObject} to populate with data
+     * @param objToLoad the {@link IDataObject} to populate with data
      * @param source the byte array containing the data
      * @param <T> the type of the data object
-     * @return the populated {@link DataObject}
+     * @return the populated {@link IDataObject}
      */
-    default <T extends DataObject<T>> T load(T objToLoad, byte[] source) {
+    default <T extends IDataObject<T>> T load(T objToLoad, byte[] source) {
         return load(objToLoad, new String(source));
     }
 
     /**
-     * Loads data from a string into the specified {@link DataObject}.
+     * Loads data from a string into the specified {@link IDataObject}.
      *
-     * @param objToLoad the {@link DataObject} to populate with data
+     * @param objToLoad the {@link IDataObject} to populate with data
      * @param source the string containing the data
      * @param <T> the type of the data object
-     * @return the populated {@link DataObject}
+     * @return the populated {@link IDataObject}
      */
-    default <T extends DataObject<T>> T load(T objToLoad, String source) {
+    default <T extends IDataObject<T>> T load(T objToLoad, String source) {
         return objToLoad.loadData(deserialize(source));
     }
 }
