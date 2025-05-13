@@ -27,26 +27,6 @@ public class ComponentManager<C> implements IDataObject<ComponentManager<C>>, Di
             }
         }
     }
-    /**
-     * Call the render method in the registered components. If the component is disabled, the render is skipped.
-     */
-    public void render() {
-        for (IComponent component : components.values()) {
-            if (component.isEnable()) {
-                component.render();
-            }
-        }
-    }
-    /**
-     * Call the resize method in the registered components. If the component is disabled, the resize is skipped.
-     */
-    public void resize(int width, int height) {
-        for (IComponent component : components.values()) {
-            if (component.isEnable()) {
-                component.resize(width, height);
-            }
-        }
-    }
 
     public <T extends IComponent> T register(String id, IComponent component) {
         return (T) this.components.put(id, component);

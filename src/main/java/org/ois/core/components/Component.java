@@ -20,10 +20,4 @@ public abstract class Component extends DataObject implements IComponent {
     public boolean isEnable() {
         return this.enable.get();
     }
-
-    @Override
-    public void render() {}
-
-    @Override
-    public void resize(int width, int height) {}
 }

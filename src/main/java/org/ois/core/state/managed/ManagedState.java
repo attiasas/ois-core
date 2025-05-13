@@ -35,17 +35,10 @@ public class ManagedState implements IManagedState {
     }
 
     @Override
-    public void render() {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        components.render();
-        entityManager.render();
-    }
+    public void render() {}
 
     @Override
-    public void resize(int width, int height) {
-        components.resize(width, height);
-        entityManager.resize(width, height);
-    }
+    public void resize(int width, int height) {}
 
     @Override
     public void pause() {}

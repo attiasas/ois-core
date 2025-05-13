@@ -166,43 +166,12 @@ public class EntityManager implements IDataObject<EntityManager>, Disposable {
      * Updates all enabled entities.
      */
     public void update() {
-//        log.debug("Updating entities");
         for (Map<ID, Entity> typeInstances : entities.values()) {
             for (Entity entity : typeInstances.values()) {
                 if (!entity.isEnabled()) {
-//                    log.debug(String.format("entity '%s' disabled", entity.id));
                     continue;
                 }
-//                log.debug(String.format("Update entity '%s'", entity.id));
                 entity.update();
-            }
-        }
-    }
-
-    /**
-     * TODO: remove
-     */
-    public void render() {
-        for (Map<ID, Entity> typeInstances : entities.values()) {
-            for (Entity entity : typeInstances.values()) {
-                if (!entity.isEnabled()) {
-                    continue;
-                }
-                entity.render();
-            }
-        }
-    }
-
-    /**
-     * TODO: remove
-     */
-    public void resize(int width, int height) {
-        for (Map<ID, Entity> typeInstances : entities.values()) {
-            for (Entity entity : typeInstances.values()) {
-                if (!entity.isEnabled()) {
-                    continue;
-                }
-                entity.resize(width, height);
             }
         }
     }

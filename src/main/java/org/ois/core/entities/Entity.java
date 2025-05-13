@@ -51,22 +51,6 @@ public class Entity extends DataObject {
         components.update();
     }
 
-    /** TODO: remove */
-    public void render() {
-        if (!this.enabled.get()) {
-            return;
-        }
-        components.render();
-    }
-
-    /** TODO: remove */
-    public void resize(int width, int height) {
-        if (!this.enabled.get()) {
-            return;
-        }
-        components.resize(width, height);
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
