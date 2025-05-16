@@ -4,10 +4,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import org.ois.core.entities.Entity;
-import org.ois.core.entities.EntityBlueprint;
+import org.ois.core.project.blueprints.EntityBlueprint;
 import org.ois.core.entities.EntityManager;
 import org.ois.core.utils.ReflectionUtils;
-import org.ois.core.utils.io.data.Blueprint;
+import org.ois.core.utils.io.data.DataBlueprint;
 import org.ois.core.utils.io.data.DataNode;
 import org.ois.core.utils.io.data.formats.JsonFormat;
 import org.ois.core.utils.log.Logger;
@@ -45,15 +45,15 @@ public class Entities {
     public final static String ENTITY_CUSTOM_CLASS_PROPERTY = "class";
 
     /** A map that holds blueprints indexed by their entity type. */
-    private static final Map<String, Blueprint<Entity>> blueprints = new Hashtable<>();
+    private static final Map<String, DataBlueprint<Entity>> blueprints = new Hashtable<>();
 
     /**
      * Retrieves the blueprint for the specified entity type.
      *
      * @param type The type of the entity.
-     * @return The {@code Blueprint} associated with the specified entity type, or {@code null} if not found.
+     * @return The {@code DataBlueprint} associated with the specified entity type, or {@code null} if not found.
      */
-    public static Blueprint<Entity> getBlueprint(String type) {
+    public static DataBlueprint<Entity> getBlueprint(String type) {
         return blueprints.get(type);
     }
 
@@ -91,33 +91,33 @@ public class Entities {
                 log.warn(String.format("entity '%s' skipped, can't find valid blueprint at '%s.blueprint.ois'", entityType, entityType));
                 continue;
             }
+            log.debug(LOG_TOPIC, "loading '%s'", entityBlueprintFile);
             byte[] data = entityBlueprintFile.readBytes();
             if (data == null) {
                 throw new RuntimeException(String.format("Can't load '%s' blueprint", entityType));
             }
             String rawData = new String(data);
             DataNode dataNode = JsonFormat.compact().deserialize(rawData);
-            Blueprint<Entity> entityBlueprint = dataNode.contains(BLUEPRINT_CUSTOM_CLASS_PROPERTY) ? ReflectionUtils.newInstance(dataNode.get(BLUEPRINT_CUSTOM_CLASS_PROPERTY).getString()) : new EntityBlueprint(entityType);
-            log.debug(LOG_TOPIC, String.format("'%s' Blueprint (%s): %s", entityType, entityBlueprint.getClass().getName(), rawData));
+            DataBlueprint<Entity> entityBlueprint = dataNode.contains(BLUEPRINT_CUSTOM_CLASS_PROPERTY) ? ReflectionUtils.newInstance(dataNode.get(BLUEPRINT_CUSTOM_CLASS_PROPERTY).getString()) : new EntityBlueprint(entityType);
+            log.debug(LOG_TOPIC, "'%s' Blueprint (%s): %s", entityType, entityBlueprint.getClass().getName(), rawData);
             blueprints.put(entityType, entityBlueprint.loadData(dataNode));
         }
-        log.debug(LOG_TOPIC, String.format("Loaded '%d' entities blueprints", blueprints.size()));
+        log.debug(LOG_TOPIC, "Loaded '%d' entities blueprints", blueprints.size());
     }
 
     /**
-     * Loads an {@code EntityManager} from the specified directory, using the manifest file located inside it.
-     *
+     * Set the {@code EntityManager} manifest file located if exists in the state directory
+     * @param manager The {@code EntityManager} instance created using the provided manifest
      * @param stateManifestDir The directory where the entity manager's manifest is located.
-     * @return The {@code EntityManager} instance created using the provided manifest.
      */
-    public static EntityManager loadManager(FileHandle stateManifestDir) {
-        EntityManager manager = new EntityManager();
+    public static void setManagerManifest(EntityManager manager, FileHandle stateManifestDir) {
         FileHandle entityManagerManifest = stateManifestDir.child("entities.manifest.ois");
-        if (entityManagerManifest.exists() && !entityManagerManifest.isDirectory()) {
-            log.debug(String.format("found entities manifest at: %s", entityManagerManifest));
-            manager.setManifest(entityManagerManifest);
+        if (!entityManagerManifest.exists() || entityManagerManifest.isDirectory()) {
+            // Nothing to do
+            return;
         }
-        return manager;
+        log.debug(String.format("found entities manifest at: %s", entityManagerManifest));
+        manager.setManifest(entityManagerManifest);
     }
 
     /**
@@ -127,12 +127,12 @@ public class Entities {
      * @return The deserialized {@code DataNode} containing the manifest data.
      */
     public static DataNode loadManifest(FileHandle entityManagerManifest) {
-        byte[] data = entityManagerManifest.readBytes();
+            byte[] data = entityManagerManifest.readBytes();
         if (data == null) {
-            throw new RuntimeException(String.format("Can't load state '%s'", entityManagerManifest));
+            throw new RuntimeException(String.format("Can't load manifest '%s'", entityManagerManifest));
         }
         String rawData = new String(data);
-        log.debug(LOG_TOPIC, String.format("Loaded entities manifest: %s", rawData));
+        log.debug(LOG_TOPIC, "Loaded entities manifest: %s", rawData);
         return JsonFormat.compact().deserialize(rawData);
     }
 }
