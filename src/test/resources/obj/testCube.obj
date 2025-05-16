@@ -1,0 +1,17 @@
+# Simple cube
+# Vertices
+v -0.5 -0.5 -0.5
+v  0.5 -0.5 -0.5
+v  0.5  0.5 -0.5
+v -0.5  0.5 -0.5
+v -0.5 -0.5  0.5
+v  0.5 -0.5  0.5
+v  0.5  0.5  0.5
+v -0.5  0.5  0.5
+# Faces (1-based indexing, counter-clockwise)
+f 1 2 3 4  # Back face
+f 5 6 7 8  # Front face
+f 1 5 8 4  # Left face
+f 2 6 7 3  # Right face
+f 4 3 7 8  # Top face
+f 1 2 6 5  # Bottom face

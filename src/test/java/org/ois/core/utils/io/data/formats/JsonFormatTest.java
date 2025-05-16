@@ -37,18 +37,17 @@ public class JsonFormatTest {
     public void testSerialize() throws IOException {
         // Human readable
         String actual = JsonFormat.humanReadable().serialize(node);
-        String expected = Files.readString(testFilesDirPath.resolve("testNode.json")).replaceAll("\r","");
-        assertEquals(actual, expected);
+        System.out.println(actual);
+        assertEquals(actual, Files.readString(testFilesDirPath.resolve("testNode.json")).replaceAll("\r",""));
 
         // Compact
         actual = JsonFormat.compact().serialize(node);
-        expected = Files.readString(testFilesDirPath.resolve("testNodeCompact.json"));
-        assertEquals(actual, expected);
+        System.out.println(actual);
+        assertEquals(actual, Files.readString(testFilesDirPath.resolve("testNodeCompact.json")));
     }
 
     @Test
     public void testDeserialize() throws IOException {
-        DataNode actual = JsonFormat.compact().deserialize(Files.readString(testFilesDirPath.resolve("testNode.json")));
-        assertEquals(actual, node);
+        assertEquals(JsonFormat.compact().deserialize(Files.readString(testFilesDirPath.resolve("testNode.json"))), node);
     }
 }
